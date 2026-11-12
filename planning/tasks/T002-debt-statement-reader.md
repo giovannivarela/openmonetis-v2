@@ -41,7 +41,7 @@ o Bradesco (T006) entra como um segundo leitor, sem mudar o motor nem o modelo.
 - [x] Texto que não é um extrato suportado, linha de tabela ilegível, operação desconhecida e
       sistema de amortização não suportado geram `DebtStatementError` com código próprio.
 - [x] O utilitário de PDF extrai as linhas, na ordem, de um PDF sintético versionado.
-- [x] Teste local opt-in (`DEBTS_PRIVATE_STATEMENT_LINES`) com o extrato real reproduz todas as
+- [x] Teste local opt-in (`DEBTS_PRIVATE_STATEMENT`) com o extrato real reproduz todas as
       linhas, encargos e totais inclusive.
 - [x] `pnpm check`, `pnpm test` e `pnpm build` verdes.
 
@@ -58,11 +58,11 @@ o Bradesco (T006) entra como um segundo leitor, sem mudar o motor nem o modelo.
 ## Log
 - 2026-11-12 — `pdfjs-dist` avaliado: é da Mozilla e amplamente usado. Fixado em 6.4.299
   (03/10/2026), porque a 6.5.438 tem menos de duas semanas.
-- 2026-11-12 — A reconstrução de linhas pelo `pdfjs` foi conferida no extrato real: 213 linhas,
-  no mesmo formato da análise.
+- 2026-11-12 — A reconstrução de linhas pelo `pdfjs` foi conferida no extrato real, com o
+  mesmo formato da análise.
 - 2026-11-12 — Os totais do banco podem trazer ajustes de centavo que não aparecem nas colunas (uma
   parcela mostra "Ajuste Financeiro" fora do total e a seguinte vem R$ 0,01 menor). Por isso o
   total real de uma parcela conhecida passou a ter precedência no motor, com teste próprio.
 - 2026-11-12 — RED: 10 testes novos falhando pelo comportamento ausente. GREEN: todos verdes. O PDF
-  real passa pela cadeia inteira: 213 linhas → 156 parcelas e 32 extras → todas as linhas, encargos
-  e totais iguais aos do banco. `pnpm check`, `pnpm test` (885) e `pnpm build` verdes.
+  real passa pela cadeia inteira (PDF → linhas → extrato → motor), com todas as linhas, encargos e
+  totais iguais aos do banco. `pnpm check`, `pnpm test` (885) e `pnpm build` verdes.
