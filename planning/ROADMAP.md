@@ -2,7 +2,7 @@
 
 Single source of truth for status. See `README.md` for how the system works.
 
-**In flow now:** T001 em revisão (PR aberto); próxima: T002
+**In flow now:** — (T001 e T002 em revisão; próxima: T003)
 
 ---
 
@@ -35,7 +35,7 @@ _Empty._
 | ID | Task | Epic | Status | Spec | PR |
 |----|------|------|--------|------|----|
 | T001 | [Motor de cronograma SAC no domain](tasks/T001-debt-schedule-engine.md) | E01 | in-review | [docs/debts.md](../docs/debts.md) | [#1](https://github.com/giovannivarela/openmonetis-v2/pull/1) |
-| T002 | Leitor de extrato: modelo canônico + adaptador Itaú DDC | E01 | inbox | — | — |
+| T002 | [Leitor de extrato: modelo canônico + adaptador Itaú DDC](tasks/T002-debt-statement-reader.md) | E01 | in-review | este arquivo | [#2](https://github.com/giovannivarela/openmonetis-v2/pull/2) |
 | T003 | Persistência e API de dívidas | E01 | inbox | — | — |
 | T004 | Tela de dívidas (variantes antes do código) | E01 | inbox | — | — |
 | T005 | Parcela como despesa + Compromissos futuros | E01 | inbox | — | — |

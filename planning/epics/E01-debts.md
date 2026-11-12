@@ -41,7 +41,7 @@ futuros.
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
 | T001 | Motor de cronograma SAC no domain | in-review | GREEN |
-| T002 | Leitor de extrato: modelo canônico + adaptador Itaú DDC | inbox | ponto de extensão por banco |
+| T002 | Leitor de extrato: modelo canônico + adaptador Itaú DDC | in-review | ponto de extensão por banco |
 | T003 | Persistência e API de dívidas | inbox | depende de T001 e T002 |
 | T004 | Tela de dívidas | inbox | variantes de layout antes do código |
 | T005 | Parcela como despesa + Compromissos futuros | inbox | depende de T003 |
