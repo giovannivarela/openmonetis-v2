@@ -34,7 +34,7 @@ _Empty._
 
 | ID | Task | Epic | Status | Spec | PR |
 |----|------|------|--------|------|----|
-| T001 | [Motor de cronograma SAC no domain](tasks/T001-debt-schedule-engine.md) | E01 | in-review | [docs/debts.md](../docs/debts.md) | — |
+| T001 | [Motor de cronograma SAC no domain](tasks/T001-debt-schedule-engine.md) | E01 | in-review | [docs/debts.md](../docs/debts.md) | [#1](https://github.com/giovannivarela/openmonetis-v2/pull/1) |
 | T002 | Leitor de extrato: modelo canônico + adaptador Itaú DDC | E01 | inbox | — | — |
 | T003 | Persistência e API de dívidas | E01 | inbox | — | — |
 | T004 | Tela de dívidas (variantes antes do código) | E01 | inbox | — | — |

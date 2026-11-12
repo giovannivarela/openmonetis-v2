@@ -3,7 +3,7 @@
 - **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** `docs/debts.md` (criado nesta task)
-- **PR:** —
+- **PR:** https://github.com/giovannivarela/openmonetis-v2/pull/1
 
 ## What & why
 Uma função pura que, a partir dos termos do contrato, dos fatores de correção, dos eventos e das
