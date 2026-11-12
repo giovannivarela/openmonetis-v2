@@ -3,7 +3,7 @@
 - **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo + `docs/debts.md` (seção "Leitura de extrato")
-- **PR:** —
+- **PR:** https://github.com/giovannivarela/openmonetis-v2/pull/2 (empilhado sobre o #1)
 
 ## What & why
 Transformar o PDF de um demonstrativo bancário na entrada do motor (T001). A leitura é um ponto de
