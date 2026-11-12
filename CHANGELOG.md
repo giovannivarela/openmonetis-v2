@@ -13,6 +13,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   período quebrado, amortizações extraordinárias com redução de prazo ou de parcela e encargos por
   regra. Ele reproduz ao centavo o demonstrativo de um financiamento habitacional. Veja
   [Dívidas](docs/debts.md).
+- Domínio: leitura de demonstrativos de dívida como ponto de extensão, com um leitor por banco. O
+  primeiro é o Demonstrativo Descritivo de Crédito (DDC) do Itaú. O extrato lido vira a entrada do
+  motor, com as regras de encargos deduzidas da projeção do próprio banco.
+- API: extração das linhas de texto de PDFs com `pdfjs-dist` 6.4.299.
 
 ## [0.17.1] - 2026-11-11
 
