@@ -40,7 +40,7 @@ function row(
 
 const terms = { principal: 1_000, contractDate: "2024-01-20" };
 
-test("the balance chart starts at the contract and hands over to the projection after today", () => {
+test("the balance chart starts at the contract, hands over to the projection after today and carries each installment", () => {
   const schedule = [row(1, { status: "paid" }), row(2, { extraPrincipal: 50 }), row(3)];
 
   assert.deepEqual(buildDebtBalanceSeries(terms, schedule, 1), [
@@ -48,13 +48,42 @@ test("the balance chart starts at the contract and hands over to the projection 
       date: "2024-01-20",
       number: null,
       balance: 1_000,
+      installment: null,
+      extraPrincipal: 0,
       recorded: 1_000,
       projected: null,
       extra: null,
     },
-    { date: "2024-02-05", number: 1, balance: 900, recorded: 900, projected: 900, extra: null },
-    { date: "2024-03-05", number: 2, balance: 800, recorded: null, projected: 800, extra: 800 },
-    { date: "2024-04-05", number: 3, balance: 700, recorded: null, projected: 700, extra: null },
+    {
+      date: "2024-02-05",
+      number: 1,
+      balance: 900,
+      installment: 135,
+      extraPrincipal: 0,
+      recorded: 900,
+      projected: 900,
+      extra: null,
+    },
+    {
+      date: "2024-03-05",
+      number: 2,
+      balance: 800,
+      installment: 135,
+      extraPrincipal: 50,
+      recorded: null,
+      projected: 800,
+      extra: 800,
+    },
+    {
+      date: "2024-04-05",
+      number: 3,
+      balance: 700,
+      installment: 135,
+      extraPrincipal: 0,
+      recorded: null,
+      projected: 700,
+      extra: null,
+    },
   ]);
 });
 
@@ -79,6 +108,8 @@ test("the balance chart axis marks one January every few years", () => {
     date,
     number: 1,
     balance: 1,
+    installment: 1,
+    extraPrincipal: 0,
     recorded: 1,
     projected: null,
     extra: null,

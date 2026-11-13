@@ -146,14 +146,26 @@ function BalanceTooltip({ point }: { point: DebtBalancePoint }) {
           ? `Contrato · ${formatDebtDate(point.date)}`
           : `Parcela ${point.number} · ${formatDebtDate(point.date)}`}
       </p>
+      {point.installment !== null ? (
+        <p className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">
+            {point.recorded === null ? "Parcela projetada" : "Parcela"}
+          </span>
+          <MoneyValue amount={point.installment} className="ml-auto font-medium" />
+        </p>
+      ) : null}
+      {point.extraPrincipal > 0 ? (
+        <p className="flex items-center gap-1.5 text-info">
+          Extra no principal
+          <MoneyValue amount={point.extraPrincipal} className="ml-auto font-medium" />
+        </p>
+      ) : null}
       <p className="flex items-center gap-1.5">
         <span className="text-muted-foreground">
           {point.number === null ? "Valor financiado" : "Saldo após a parcela"}
         </span>
         <MoneyValue amount={point.balance} className="ml-auto font-medium" />
       </p>
-      {point.recorded === null ? <p className="text-muted-foreground">Projeção</p> : null}
-      {point.extra !== null ? <p className="text-info">Com amortização extra</p> : null}
     </div>
   );
 }

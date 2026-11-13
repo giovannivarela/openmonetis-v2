@@ -15,6 +15,10 @@ export type DebtBalancePoint = {
   /** Installment number; `null` for the contract point. */
   number: number | null;
   balance: number;
+  /** Total of the installment; `null` for the contract point. */
+  installment: number | null;
+  /** Principal of the extras carried by the installment. */
+  extraPrincipal: number;
   /** Balance up to today, `null` afterwards. */
   recorded: number | null;
   /** Balance from today on, `null` before; the last due point belongs to both lines. */
@@ -33,11 +37,18 @@ export function buildDebtBalanceSeries(
   paidInstallments: number,
 ): DebtBalancePoint[] {
   const points = [
-    { date: terms.contractDate, number: null, balance: terms.principal, extraPrincipal: 0 },
+    {
+      date: terms.contractDate,
+      number: null,
+      balance: terms.principal,
+      installment: null,
+      extraPrincipal: 0,
+    },
     ...schedule.map((row) => ({
       date: row.dueDate,
       number: row.number,
       balance: row.balanceAfter,
+      installment: row.installment,
       extraPrincipal: row.extraPrincipal,
     })),
   ];
@@ -45,6 +56,8 @@ export function buildDebtBalanceSeries(
     date: point.date,
     number: point.number,
     balance: point.balance,
+    installment: point.installment,
+    extraPrincipal: point.extraPrincipal,
     recorded: index <= paidInstallments ? point.balance : null,
     projected: index >= paidInstallments ? point.balance : null,
     extra: point.extraPrincipal > 0 ? point.balance : null,
