@@ -48,6 +48,7 @@
     "test:connections:integration": "CONNECTIONS_INTEGRATION_TEST=1 tsx --test apps/api/src/person-connections.integration.test.ts",
     "test:imports:integration": "IMPORTS_INTEGRATION_TEST=1 tsx --test apps/api/src/imports.integration.test.ts",
     "test:settings:integration": "SETTINGS_INTEGRATION_TEST=1 tsx --test apps/api/src/settings.integration.test.ts",
+    "test:debts:integration": "DEBTS_INTEGRATION_TEST=1 tsx --test apps/api/src/debts.integration.test.ts",
     "test:ownership:integration": "OWNERSHIP_INTEGRATION_TEST=1 tsx --test apps/api/src/ownership.integration.test.ts",
     "test:migrations:integration": "MIGRATIONS_INTEGRATION_TEST=1 tsx --test apps/api/src/migrations.integration.test.ts",
     "test:storage:integration": "STORAGE_INTEGRATION_TEST=1 tsx --test apps/api/src/storage.integration.test.ts",

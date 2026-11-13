@@ -92,6 +92,36 @@ próprio, em vez de números errados.
   acordo parcelado (fixos). "Ajuste Financeiro" e "FGTS Mensal" não são encargos: o banco não os
   soma ao total.
 
+## API
+
+Todas as rotas exigem sessão, respondem com cache privado e filtram pelo usuário autenticado.
+
+| Método | Rota | O que faz |
+| --- | --- | --- |
+| `GET` | `/debts` | Lista as dívidas com resumo e próxima parcela. |
+| `POST` | `/debts/imports` | Importa um extrato em PDF (`{ fileName, contentBase64 }`). |
+| `GET` | `/debts/{id}` | Resumo, cronograma completo e amortizações extraordinárias. |
+| `PATCH` | `/debts/{id}` | Altera o nome e a hipótese de correção mensal da projeção. |
+| `DELETE` | `/debts/{id}` | Remove a dívida e seus extratos. |
+
+- **Persistência:** `debts` guarda a identidade da dívida (banco, formato, referência do contrato,
+  nome e hipótese de correção). `debt_statements` guarda o extrato canônico de cada importação, em
+  `jsonb`. O cronograma não é gravado: é recalculado pelo motor a partir do extrato mais recente.
+- **Reimportação:** a dívida é identificada por usuário, banco e referência do contrato. Um extrato
+  mais novo passa a valer; o mesmo extrato (mesma data de emissão) substitui o anterior. O nome e a
+  hipótese de correção escolhidos pela pessoa são mantidos.
+- **Trava de integridade:** antes de gravar, o motor precisa reproduzir todas as parcelas pagas e a
+  aberta do próprio extrato. Se não reproduz, a importação é recusada com `statement_not_reproduced`
+  e nada é gravado.
+- **Erros da importação (400):** `invalid_pdf`, `unsupported_statement`,
+  `unsupported_amortization_system`, `unsupported_operation`, `unreadable_line`, `missing_field` e
+  `statement_not_reproduced`.
+- O PDF é lido em memória e não é armazenado. Importações têm limite de 10 por minuto por pessoa.
+- O resumo considera vencidas as parcelas com vencimento até a data atual no Brasil. As situações
+  de cada parcela (paga, aberta, projetada) vêm do extrato. Por isso, um extrato antigo mostra como
+  projetadas parcelas que já venceram: importe um mais recente.
+- "Zerar dados" remove dívidas e extratos.
+
 ## Validação
 
 - `packages/domain/src/debts.test.ts` cobre cada regra com casos pequenos calculados à mão.
@@ -101,6 +131,10 @@ próprio, em vez de números errados.
 - `packages/domain/src/debt-statements.test.ts` lê um DDC sintético (contrato fictício e
   placeholders no lugar de nome e documentos) e confere que a cadeia leitura → entrada → motor
   reproduz todas as linhas, incluindo as projetadas, os encargos e os totais.
+- `apps/api/src/services/debts.service.test.ts` cobre a importação, a reimportação, as recusas sem
+  gravação, a hipótese de correção e o isolamento entre usuários.
+- `pnpm test:debts:integration` importa um PDF sintético do DDC por HTTP, com PostgreSQL, e confere
+  o cronograma, a reimportação, o isolamento, a hipótese de correção e a remoção em cascata.
 - Extratos reais nunca entram no repositório. Para conferir um extrato localmente, gere fixtures no
   mesmo formato e rode:
 

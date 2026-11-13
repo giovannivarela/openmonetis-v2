@@ -6,6 +6,8 @@ import {
   categories,
   dashboardPreferences,
   db,
+  debtStatements,
+  debts,
   deviceTokens,
   dueDateRuleVersions,
   establishmentLogos,
@@ -133,6 +135,8 @@ async function clearApplicationDataForUser(transaction: DatabaseTransaction, use
     .where(eq(recurringTransactionSeries.userId, userId));
   await transaction.delete(tags).where(eq(tags.userId, userId));
   await transaction.delete(goals).where(eq(goals.userId, userId));
+  await transaction.delete(debtStatements).where(eq(debtStatements.userId, userId));
+  await transaction.delete(debts).where(eq(debts.userId, userId));
   await transaction.delete(installmentSeries).where(eq(installmentSeries.userId, userId));
   await transaction.delete(invoices).where(eq(invoices.userId, userId));
   await transaction.delete(cards).where(eq(cards.userId, userId));

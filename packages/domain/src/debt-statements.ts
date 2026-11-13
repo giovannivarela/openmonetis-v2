@@ -1,4 +1,5 @@
 import {
+  buildDebtSchedule,
   type DebtChargeRule,
   type DebtChargeRuleType,
   type DebtExtraAmortization,
@@ -189,4 +190,28 @@ export function scheduleInputFromStatement(
     chargeRules: chargeRulesFromProjection(statement),
     projection,
   };
+}
+
+/**
+ * Numbers of the known (paid or open) installments the engine does not reproduce from the
+ * statement itself. An empty list means the statement is fully understood; anything else means
+ * the engine would show numbers that differ from the bank's.
+ */
+export function findStatementDivergences(statement: DebtStatement): number[] {
+  const rows = buildDebtSchedule(
+    scheduleInputFromStatement(statement, { monthlyCorrectionFactor: 1 }),
+  );
+  return statement.installments
+    .filter((installment) => installment.status !== "projected")
+    .filter((installment) => {
+      const row = rows[installment.number - 1];
+      return (
+        !row ||
+        row.dueDate !== installment.dueDate ||
+        row.amortizationCents !== installment.amortizationCents ||
+        row.interestCents !== installment.interestCents ||
+        row.balanceAfterCents !== installment.balanceAfterCents
+      );
+    })
+    .map((installment) => installment.number);
 }

@@ -30,6 +30,7 @@ import {
 import { categoryTrendsRepository } from "./repositories/category-trends.repository";
 import { commitmentsRepository } from "./repositories/commitments.repository";
 import { dashboardRepository } from "./repositories/dashboard.repository";
+import { debtsRepository } from "./repositories/debts.repository";
 import { deviceTokensRepository } from "./repositories/device-tokens.repository";
 import { dueDateRulesRepository } from "./repositories/due-date-rules.repository";
 import { establishmentsRepository } from "./repositories/establishments.repository";
@@ -80,6 +81,7 @@ import { createCategoriesRoute } from "./routes/categories";
 import { createCategoryTrendsRoute } from "./routes/category-trends";
 import { createCommitmentsRoute } from "./routes/commitments";
 import { createDashboardRoute } from "./routes/dashboard";
+import { createDebtsRoute } from "./routes/debts";
 import { createCompanionDeviceRoute, createDeviceTokensRoute } from "./routes/device-tokens";
 import { createDueDateRulesRoute } from "./routes/due-date-rules";
 import { createEstablishmentsRoute } from "./routes/establishments";
@@ -119,6 +121,7 @@ import { createCategoriesService } from "./services/categories.service";
 import { createCategoryTrendsService } from "./services/category-trends.service";
 import { createCommitmentsService } from "./services/commitments.service";
 import { createDashboardService } from "./services/dashboard.service";
+import { createDebtsService } from "./services/debts.service";
 import { createDeviceTokensService } from "./services/device-tokens.service";
 import {
   createDueDateRulesService,
@@ -184,6 +187,8 @@ const budgetsService = createBudgetsService(budgetsRepository, categoriesReposit
 const budgetsRoute = createBudgetsRoute(budgetsService);
 const goalsService = createGoalsService(goalsRepository, accountsService);
 const goalsRoute = createGoalsRoute(goalsService);
+const debtsService = createDebtsService(debtsRepository);
+const debtsRoute = createDebtsRoute(debtsService);
 const billsService = createBillsService(billsRepository, undefined, dueDateRulesRepository);
 const billsRoute = createBillsRoute(billsService);
 const categoriesRoute = createCategoriesRoute(createCategoriesService(categoriesRepository));
@@ -458,6 +463,18 @@ app.use("/budgets", privateCache);
 app.use("/budgets/*", privateCache);
 app.use("/budgets", requireAuth);
 app.use("/budgets/*", requireAuth);
+app.use("/debts", privateCache);
+app.use("/debts/*", privateCache);
+app.use("/debts", requireAuth);
+app.use("/debts/*", requireAuth);
+app.use(
+  "/debts/imports",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 10,
+    key: (context) => `debt-imports:${context.get("userId")}`,
+  }),
+);
 app.use("/goals", privateCache);
 app.use("/goals/*", privateCache);
 app.use("/goals", requireAuth);
@@ -789,6 +806,7 @@ app.route("/api/auth/device", companionDeviceRoute);
 app.route("/accounts", accountsRoute);
 app.route("/cards", cardsRoute);
 app.route("/budgets", budgetsRoute);
+app.route("/debts", debtsRoute);
 app.route("/goals", goalsRoute);
 app.route("/bills", billsRoute);
 app.route("/categories", categoriesRoute);

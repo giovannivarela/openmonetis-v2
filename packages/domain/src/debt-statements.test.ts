@@ -6,6 +6,7 @@ import {
   type DebtStatement,
   DebtStatementError,
   type DebtStatementInstallment,
+  findStatementDivergences,
   scheduleInputFromStatement,
 } from "./debt-statements";
 import { buildDebtSchedule, type DebtScheduleRow, type DebtTerms } from "./debts";
@@ -122,6 +123,24 @@ test("derives charge rules that reproduce projected charges, band changes and a 
   };
 
   assert.deepEqual(withoutStatus(reproduce(statement)), withoutStatus(statement.installments));
+});
+
+test("finds no divergence when the engine reproduces every known installment", () => {
+  assert.deepEqual(findStatementDivergences(readDebtStatement(synthetic.lines)), []);
+});
+
+test("reports the known installments the engine does not reproduce", () => {
+  const statement = readDebtStatement(synthetic.lines);
+  const tampered: DebtStatement = {
+    ...statement,
+    installments: statement.installments.map((installment) =>
+      installment.number === 5
+        ? { ...installment, interestCents: installment.interestCents + 1 }
+        : installment,
+    ),
+  };
+
+  assert.deepEqual(findStatementDivergences(tampered), [5]);
 });
 
 test("rejects text that is not a supported statement", () => {

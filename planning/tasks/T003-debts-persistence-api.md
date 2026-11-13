@@ -1,6 +1,6 @@
 # T003: Persistência e API de dívidas
 
-- **Status:** in-flow
+- **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo + `docs/debts.md` (seção "API")
 - **PR:** —
@@ -49,15 +49,15 @@ integração com despesas (T005) consomem esses endpoints.
 - Guardar o PDF original.
 
 ## Acceptance criteria
-- [ ] Importar o PDF sintético cria a dívida e devolve resumo e cronograma iguais aos do extrato.
-- [ ] Reimportar o mesmo extrato não duplica a dívida nem o extrato; um extrato mais novo do mesmo
+- [x] Importar o PDF sintético cria a dívida e devolve resumo e cronograma iguais aos do extrato.
+- [x] Reimportar o mesmo extrato não duplica a dívida nem o extrato; um extrato mais novo do mesmo
       contrato passa a valer.
-- [ ] PDF inválido, extrato não suportado e extrato que o motor não reproduz são recusados com
+- [x] PDF inválido, extrato não suportado e extrato que o motor não reproduz são recusados com
       400 e código próprio, sem gravar nada.
-- [ ] Outro usuário não lê, altera nem remove a dívida (404). Sem sessão, 401.
-- [ ] Alterar a hipótese de correção muda a projeção, mas não as parcelas conhecidas.
-- [ ] "Zerar dados" remove dívidas e extratos.
-- [ ] `pnpm check`, `pnpm test`, `pnpm build` e a integração de dívidas verdes.
+- [x] Outro usuário não lê, altera nem remove a dívida (404). Sem sessão, 401.
+- [x] Alterar a hipótese de correção muda a projeção, mas não as parcelas conhecidas.
+- [x] "Zerar dados" remove dívidas e extratos.
+- [x] `pnpm check`, `pnpm test`, `pnpm build` e a integração de dívidas verdes.
 
 ## Dependencies
 - T001 e T002 (PRs #1 e #2). Este PR fica empilhado sobre o #2.
@@ -72,3 +72,7 @@ integração com despesas (T005) consomem esses endpoints.
 ## Log
 - 2026-11-12 — Importação por JSON com base64, seguindo `POST /transactions/imports/preview`.
   Extras manuais ficaram fora, porque o DDC já reflete a extra no mesmo dia.
+- 2026-11-13 — RED: testes do service e da integração falhando pela ausência das rotas e
+  tabelas. GREEN: service (8), integração de dívidas (9) e "zerar dados" com uma dívida semeada
+  verdes contra um PostgreSQL 16 descartável. A integração cobre também um extrato mais novo do
+  mesmo contrato passando a valer. `pnpm check`, `pnpm test` e `pnpm build` verdes.

@@ -10,6 +10,7 @@
     "./category-trends": "./src/category-trends.ts",
     "./commitments": "./src/commitments.ts",
     "./debts": "./src/debts.ts",
+    "./money": "./src/money.ts",
     "./debt-statements": "./src/debt-statements.ts",
     "./debt-statement-readers": "./src/debt-statement-readers.ts",
     "./financial-distribution": "./src/financial-distribution.ts",

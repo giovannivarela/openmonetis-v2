@@ -19,6 +19,7 @@ import {
   aiToolEventStatuses,
   aiToolFailureCodes,
 } from "@openmonetis/domain/ai-tools";
+import { type DebtStatement, debtStatementBanks } from "@openmonetis/domain/debt-statements";
 import type {
   DueDateAdjustmentDetails,
   DueDateRuleVersion,
@@ -2683,4 +2684,67 @@ export const aiToolEvents = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (table) => [index("ai_tool_events_created_at_idx").on(table.createdAt)],
+);
+
+export const debtBank = pgEnum("debt_bank", debtStatementBanks);
+
+export const debts = pgTable(
+  "debts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    bank: debtBank("bank").notNull(),
+    statementFormat: varchar("statement_format", { length: 32 }).notNull(),
+    contractReference: varchar("contract_reference", { length: 64 }).notNull(),
+    projectedMonthlyCorrectionRate: numeric("projected_monthly_correction_rate", {
+      precision: 8,
+      scale: 6,
+    })
+      .notNull()
+      .default("0"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("debts_id_user_id_unique").on(table.id, table.userId),
+    uniqueIndex("debts_user_bank_contract_unique").on(
+      table.userId,
+      table.bank,
+      table.contractReference,
+    ),
+    check("debts_name_not_blank_check", sql`btrim(${table.name}) <> ''`),
+    check(
+      "debts_projected_correction_range_check",
+      sql`${table.projectedMonthlyCorrectionRate} >= 0 AND ${table.projectedMonthlyCorrectionRate} <= 0.05`,
+    ),
+  ],
+);
+
+export const debtStatements = pgTable(
+  "debt_statements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    debtId: uuid("debt_id").notNull(),
+    issuedOn: date("issued_on", { mode: "string" }).notNull(),
+    statement: jsonb("statement").$type<DebtStatement>().notNull(),
+    importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    foreignKey({
+      name: "debt_statements_debt_user_fk",
+      columns: [table.debtId, table.userId],
+      foreignColumns: [debts.id, debts.userId],
+    }).onDelete("cascade"),
+    uniqueIndex("debt_statements_debt_issued_on_unique").on(table.debtId, table.issuedOn),
+    index("debt_statements_user_id_idx").on(table.userId),
+  ],
 );
