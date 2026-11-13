@@ -67,20 +67,19 @@ const contractReferenceSuffixLength = 4;
 const bankDisplayNames: Record<DebtStatementBank, string> = { itau: "Itaú" };
 
 const statementErrorMessages: Record<DebtStatementErrorCode, string> = {
-  UNSUPPORTED_STATEMENT: "Este PDF não é um extrato de financiamento suportado.",
-  UNSUPPORTED_AMORTIZATION_SYSTEM:
-    "O sistema de amortização deste financiamento ainda não é suportado.",
-  UNSUPPORTED_OPERATION: "O extrato tem uma operação que ainda não sabemos interpretar.",
-  UNREADABLE_LINE: "Não foi possível ler todas as linhas do extrato.",
-  MISSING_FIELD: "Não foi possível ler todas as informações do extrato.",
+  UNSUPPORTED_STATEMENT: "This PDF is not a supported loan statement",
+  UNSUPPORTED_AMORTIZATION_SYSTEM: "The amortization system of this loan is not supported yet",
+  UNSUPPORTED_OPERATION: "The statement has an operation that cannot be read yet",
+  UNREADABLE_LINE: "Some lines of the statement could not be read",
+  MISSING_FIELD: "Some fields of the statement could not be read",
 };
 
 function invalidPdf() {
-  return badRequest("Não foi possível ler o PDF.", "invalid_pdf");
+  return badRequest("The file is not a readable PDF", "invalid_pdf");
 }
 
 function debtNotFound() {
-  return notFound("Dívida não encontrada.", "debt_not_found");
+  return notFound("Debt not found", "debt_not_found");
 }
 
 function totalsOutput(totals: DebtTotals) {
@@ -93,7 +92,11 @@ function totalsOutput(totals: DebtTotals) {
 }
 
 function rowOutput(row: DebtScheduleRow, statement: DebtStatement): DebtScheduleRowOutput {
-  const known = row.status === "known" ? statement.installments[row.number - 1] : undefined;
+  // By number, not by position: a statement does not have to list its installments from the first.
+  const known =
+    row.status === "known"
+      ? statement.installments.find((installment) => installment.number === row.number)
+      : undefined;
   return {
     number: row.number,
     dueDate: row.dueDate,
@@ -208,7 +211,7 @@ export function createDebtsService(
     }
     if (divergences.length > 0) {
       throw badRequest(
-        "Os valores do extrato não puderam ser conferidos. Nada foi importado.",
+        "The statement values could not be reproduced; nothing was imported",
         "statement_not_reproduced",
       );
     }
