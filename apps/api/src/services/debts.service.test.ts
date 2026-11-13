@@ -103,6 +103,7 @@ test("imports a statement and returns the summary and the full schedule", async 
   assert.equal(debt.summary.paidInstallments, 14);
   assert.equal(debt.summary.remainingInstallments, 169);
   assert.equal(debt.summary.monthsCut, 240 - 183);
+  assert.equal(debt.summary.lastDueDate, debt.schedule.at(-1)?.dueDate);
   assert.equal(debt.nextInstallment?.number, 15);
   assert.equal(debt.extraAmortizations.length, 6);
 });
@@ -136,6 +137,37 @@ test("an installment due today is paid, so the next one is the following install
   assert.equal(debt.schedule[13]?.dueDate, dueToday);
   assert.equal(debt.summary.paidInstallments, 14);
   assert.equal(debt.nextInstallment?.number, 15);
+});
+
+test("the detail carries yearly totals, each extra's principal and what already left the pocket", async () => {
+  const { service } = setup();
+  const debt = await service.importStatement(
+    { fileName: "ddc.pdf", contentBase64: pdfBase64 },
+    owner,
+  );
+  const cents = (amount: number) => Math.round(amount * 100);
+  const yearly = (key: "amortization" | "interest" | "charges") =>
+    debt.yearlyBreakdown.reduce((total, year) => total + cents(year[key]), 0);
+  const { paid, remaining } = debt.summary;
+
+  assert.equal(debt.yearlyBreakdown[0]?.year, 2023);
+  assert.equal(debt.yearlyBreakdown[0]?.remainingOnly, false);
+  assert.equal(debt.yearlyBreakdown.at(-1)?.remainingOnly, true);
+  assert.equal(yearly("amortization"), cents(paid.amortization) + cents(remaining.amortization));
+  assert.equal(yearly("interest"), cents(paid.interest) + cents(remaining.interest));
+  assert.equal(yearly("charges"), cents(paid.charges) + cents(remaining.charges));
+  for (const extra of debt.extraAmortizations) {
+    assert.equal(
+      cents(extra.principal),
+      cents(extra.amount) - cents(extra.proRataInterest) - cents(extra.monetaryUpdate),
+    );
+  }
+  const dueRows = debt.schedule.slice(0, debt.summary.paidInstallments);
+  assert.equal(
+    cents(debt.summary.paidOut),
+    dueRows.reduce((total, row) => total + cents(row.installment), 0) +
+      debt.extraAmortizations.reduce((total, extra) => total + cents(extra.amount), 0),
+  );
 });
 
 test("re-importing the same contract keeps a single debt", async () => {

@@ -21,6 +21,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   a partir do extrato mais recente, hipótese de correção da projeção e uma trava que recusa
   extratos cujas parcelas o motor não reproduz.
 - Banco de dados: tabelas `debts` e `debt_statements` (migration `0032_debts.sql`).
+- Web: tela de Dívidas, em Finanças. A lista mostra saldo devedor, progresso, próxima parcela e
+  fim previsto de cada financiamento. O detalhe mostra a evolução do saldo, o total pago, os
+  juros pagos e a pagar, a composição anual das parcelas, as amortizações extras e o cronograma.
+  Também permite importar o extrato, ajustar a correção projetada, renomear e excluir.
 
 ## [0.17.1] - 2026-11-11
 
