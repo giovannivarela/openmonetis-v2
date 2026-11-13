@@ -71,7 +71,7 @@ limites atuais e as próximas prioridades.
 ### Testes de integração
 
 `pnpm test` executa a suíte sem banco; as integrações PostgreSQL são comandos separados. Execute as
-suítes relacionadas à mudança, além dos comandos acima. A CI executa todas as quatorze integrações.
+suítes relacionadas à mudança, além dos comandos acima. A CI executa todas as quinze integrações.
 
 | Mudança | Comando | Cobertura principal |
 | --- | --- | --- |
