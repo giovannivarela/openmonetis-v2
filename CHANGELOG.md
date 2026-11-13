@@ -7,6 +7,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Unreleased]
 
+### Adicionado
+
+- Domínio: motor de cronograma de dívidas SAC, com correção monetária mensal, juros pró-rata em
+  período quebrado, amortizações extraordinárias com redução de prazo ou de parcela e encargos por
+  regra. Ele reproduz ao centavo o demonstrativo de um financiamento habitacional. Veja
+  [Dívidas](docs/debts.md).
+
 ## [0.17.1] - 2026-11-11
 
 O desfoque translúcido do cabeçalho, dos menus e dos painéis volta a aparecer em Chrome, Edge e
