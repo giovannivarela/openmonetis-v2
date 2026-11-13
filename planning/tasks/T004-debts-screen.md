@@ -3,7 +3,7 @@
 - **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo + maquete aprovada (aba "Escolhido · A + C")
-- **PR:** —
+- **PR:** https://github.com/giovannivarela/openmonetis-v2/pull/4 (empilhado sobre o #3)
 
 ## What & why
 Mostrar as dívidas importadas do extrato: quanto falta, quando termina, o efeito das amortizações

@@ -2,14 +2,14 @@
 
 Single source of truth for status. See `README.md` for how the system works.
 
-**In flow now:** T004 (T001–T003 em revisão)
+**In flow now:** — (T001–T004 em revisão; próxima: T005)
 
 ---
 
 ## Now / Next / Later
 
 ### Now
-- **E01 — Dívidas: financiamento com leitura de extrato** (T001–T003 em revisão)
+- **E01 — Dívidas: financiamento com leitura de extrato** (T001–T004 em revisão)
 
 ### Next
 - E02 — Simulações de dívida: descontos, quitação e extras futuras
@@ -37,6 +37,6 @@ _Empty._
 | T001 | [Motor de cronograma SAC no domain](tasks/T001-debt-schedule-engine.md) | E01 | in-review | [docs/debts.md](../docs/debts.md) | [#1](https://github.com/giovannivarela/openmonetis-v2/pull/1) |
 | T002 | [Leitor de extrato: modelo canônico + adaptador Itaú DDC](tasks/T002-debt-statement-reader.md) | E01 | in-review | este arquivo | [#2](https://github.com/giovannivarela/openmonetis-v2/pull/2) |
 | T003 | [Persistência e API de dívidas](tasks/T003-debts-persistence-api.md) | E01 | in-review | este arquivo | [#3](https://github.com/giovannivarela/openmonetis-v2/pull/3) |
-| T004 | [Tela de dívidas (lista e detalhe)](tasks/T004-debts-screen.md) | E01 | in-flow | este arquivo | — |
+| T004 | [Tela de dívidas (lista e detalhe)](tasks/T004-debts-screen.md) | E01 | in-review | este arquivo | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
 | T005 | Parcela como despesa + Compromissos futuros | E01 | inbox | — | — |
 | T006 | Adaptador Bradesco | E01 | blocked | — | — |
