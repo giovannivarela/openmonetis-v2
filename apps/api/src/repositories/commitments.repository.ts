@@ -53,6 +53,7 @@ export const commitmentsRepository = {
         period: transactions.period,
         type: sql<"income" | "expense">`${transactions.type}::text`,
         origin: transactions.origin,
+        debtId: transactions.debtId,
         amount:
           sql<string>`case when ${transactionSplits.id} is not null then ${effectiveSplitAmountSql} else ${effectiveTransactionAmountSql} end`.as(
             "amount",

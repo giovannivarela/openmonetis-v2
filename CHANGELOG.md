@@ -30,6 +30,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   extrato é reimportado ou a correção muda e nunca alteram as parcelas já pagas.
 - Banco de dados: ligação de lançamentos com parcelas de dívida e configuração do lançamento na
   dívida (migration `0033_debt_expenses.sql`).
+- Compromissos futuros: camada **Financiamentos**, com as parcelas de dívidas lançadas, separada
+  das contas avulsas. O fim de um financiamento entra no cálculo do primeiro mês de alívio.
 
 ## [0.17.1] - 2026-11-11
 
