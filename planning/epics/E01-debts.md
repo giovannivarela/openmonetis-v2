@@ -72,3 +72,20 @@ futuros.
   ponto de extensão com um adaptador por banco (T002 com Itaú, T006 com Bradesco).
 - 2026-11-12 — Ordem aprovada: motor → leitor → persistência/API → tela → integração. O leitor
   passou para antes da persistência, para que o schema nasça do modelo canônico.
+
+## Checkpoint (2026-11-13)
+- Validado localmente pelo usuário: tela, parcelas em Lançamentos e Compromissos futuros.
+- Revisão única do épico feita, com 8 achados corrigidos:
+  - exclusão de conta arquivada com parcelas configuradas;
+  - conta arquivada;
+  - conflito de gravação;
+  - limite de requisições;
+  - mensagens em inglês;
+  - edição manual documentada;
+  - privacidade do texto do gráfico;
+  - parcela buscada pelo número.
+- Contribuição ao repositório original: PRs estão desativados lá, então a proposta foi aberta como
+  issue (https://github.com/felipegcoutinho/openmonetis-v2/issues/3), apontando para o branch
+  `contrib/debts` (8 commits coesos, sem `planning/` nem `CLAUDE.md`).
+- Seguem fora: T006 (aguarda PDF do Bradesco), E04 (histórico de cartão), E05 (conciliação na
+  importação, com a T008).
