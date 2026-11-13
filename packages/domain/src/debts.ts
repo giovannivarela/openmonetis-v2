@@ -345,22 +345,38 @@ function totalsOf(rows: DebtScheduleRow[]): DebtTotals {
 }
 
 /**
- * Splits a schedule into paid (due on or before `asOf`) and remaining installments. The current
- * balance is the balance after the last installment due on or before `asOf`.
+ * Splits a schedule into paid (due on or before `asOf`) and remaining installments.
+ *
+ * An extra amortization is applied to the next installment, but the balance drops on the day it is
+ * made. So the current balance is the balance after the last due installment minus the principal of
+ * the extras made since that due date (one made on a due date is applied after that installment),
+ * and extras count as paid by their own date, not by the installment that carries them.
  */
 export function summarizeDebtSchedule(
   terms: DebtTerms,
   rows: DebtScheduleRow[],
+  extraAmortizations: DebtExtraAmortization[],
   asOf: string,
 ): DebtSummary {
   const paidRows = rows.filter((row) => row.dueDate <= asOf);
   const remainingRows = rows.filter((row) => row.dueDate > asOf);
+  const lastPaidRow = paidRows.at(-1);
+  const madeExtras = extraAmortizations.filter((extra) => extra.date <= asOf);
+  const principalOf = (extras: DebtExtraAmortization[]) =>
+    extras.reduce((sum, extra) => sum + extraAmortizationPrincipalCents(extra), 0);
+  const extrasSinceLastPaid = madeExtras.filter(
+    (extra) => !lastPaidRow || extra.date >= lastPaidRow.dueDate,
+  );
   return {
-    currentBalanceCents: paidRows.at(-1)?.balanceAfterCents ?? terms.principalCents,
+    currentBalanceCents:
+      (lastPaidRow?.balanceAfterCents ?? terms.principalCents) - principalOf(extrasSinceLastPaid),
     paidInstallments: paidRows.length,
     remainingInstallments: remainingRows.length,
     monthsCut: terms.termMonths - rows.length,
-    paid: totalsOf(paidRows),
-    remaining: totalsOf(remainingRows),
+    paid: { ...totalsOf(paidRows), extraPrincipalCents: principalOf(madeExtras) },
+    remaining: {
+      ...totalsOf(remainingRows),
+      extraPrincipalCents: principalOf(extraAmortizations.filter((extra) => extra.date > asOf)),
+    },
   };
 }

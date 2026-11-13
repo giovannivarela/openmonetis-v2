@@ -25,6 +25,7 @@
     "./bills": "./src/bills.ts",
     "./budgets": "./src/budgets.ts",
     "./goals": "./src/goals.ts",
+    "./debts": "./src/debts.ts",
     "./notes": "./src/notes.ts",
     "./notifications": "./src/notifications.ts",
     "./recurring-expenses": "./src/recurring-expenses.ts",

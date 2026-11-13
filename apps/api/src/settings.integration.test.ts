@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createTestApiClient } from "./test-support/api-client";
 import { withIntegrationDatabase } from "./test-support/integration-database";
+
+const debtStatementPdf = readFileSync(
+  new URL("./test-support/fixtures/debt-statement-itau-ddc-synthetic.pdf", import.meta.url),
+).toString("base64");
 
 test("reset and account deletion preserve other users and clean owned financial aggregates", {
   skip: process.env.SETTINGS_INTEGRATION_TEST !== "1",
@@ -66,6 +71,13 @@ test("reset and account deletion preserve other users and clean owned financial 
           settledDate: "2020-01-20",
         }),
       );
+      await api.data(
+        await api.request("/debts/imports", identity, "POST", {
+          fileName: "ddc.pdf",
+          contentBase64: debtStatementPdf,
+        }),
+        201,
+      );
       await db.insert(schema.notificationStates).values({
         userId: identity.id,
         notificationKey: "test-notification",
@@ -90,6 +102,8 @@ test("reset and account deletion preserve other users and clean owned financial 
       return snapshot;
     }
     const foreignSnapshot = await snapshot(stranger.id);
+    assert.equal((await snapshot(owner.id)).debt_statements?.length, 1);
+    assert.equal(foreignSnapshot.debt_statements?.length, 1);
     await t.test("invalid confirmation cannot reset or delete data", async () => {
       const before = await snapshot(owner.id);
       await api.error(

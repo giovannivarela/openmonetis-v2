@@ -222,7 +222,7 @@ test("projects monthly on the same day with the assumed correction until the bal
 test("summarizes paid and remaining totals and the months cut from the original term", () => {
   const debtTerms = terms();
   const rows = schedule({ terms: debtTerms, extraAmortizations: [extra()] });
-  const summary = summarizeDebtSchedule(debtTerms, rows, "2024-04-10");
+  const summary = summarizeDebtSchedule(debtTerms, rows, [extra()], "2024-04-10");
 
   assert.equal(summary.paidInstallments, 3);
   assert.equal(summary.remainingInstallments, 6);
@@ -231,6 +231,32 @@ test("summarizes paid and remaining totals and the months cut from the original 
   assert.equal(summary.paid.amortizationCents, 30_000);
   assert.equal(summary.paid.extraPrincipalCents, 30_000);
   assert.equal(summary.remaining.amortizationCents, 60_000);
+});
+
+test("an extra made after the last due installment already lowers the current balance", () => {
+  const debtTerms = terms();
+  const extras = [extra({ date: "2024-03-20" })];
+  const rows = schedule({ terms: debtTerms, extraAmortizations: extras });
+  const summary = summarizeDebtSchedule(debtTerms, rows, extras, "2024-03-25");
+
+  assert.equal(summary.paidInstallments, 2);
+  assert.equal(summary.currentBalanceCents, 120_000 - 2 * 10_000 - 30_000);
+  assert.equal(summary.paid.extraPrincipalCents, 30_000);
+  assert.equal(summary.remaining.extraPrincipalCents, 0);
+});
+
+test("an extra made on a due date counts once the installment is due", () => {
+  const debtTerms = terms();
+  const extras = [extra({ date: "2024-03-10" })];
+  const rows = schedule({ terms: debtTerms, extraAmortizations: extras });
+
+  const before = summarizeDebtSchedule(debtTerms, rows, extras, "2024-03-09");
+  assert.equal(before.currentBalanceCents, 120_000 - 10_000);
+  assert.equal(before.remaining.extraPrincipalCents, 30_000);
+
+  const onDueDate = summarizeDebtSchedule(debtTerms, rows, extras, "2024-03-10");
+  assert.equal(onDueDate.currentBalanceCents, 120_000 - 2 * 10_000 - 30_000);
+  assert.equal(onDueDate.paid.extraPrincipalCents, 30_000);
 });
 
 test("matches the independent reference engine on the synthetic fixture, row by row", () => {

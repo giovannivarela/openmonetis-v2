@@ -35,6 +35,7 @@ pnpm test:financial-distribution:integration
 pnpm test:connections:integration
 pnpm test:imports:integration
 pnpm test:settings:integration
+pnpm test:debts:integration
 pnpm test:ownership:integration
 pnpm test:migrations:integration
 pnpm test:storage:integration
