@@ -42,7 +42,7 @@ futuros.
 |----|------|--------|-------|
 | T001 | Motor de cronograma SAC no domain | in-review | GREEN |
 | T002 | Leitor de extrato: modelo canônico + adaptador Itaú DDC | in-review | ponto de extensão por banco |
-| T003 | Persistência e API de dívidas | inbox | depende de T001 e T002 |
+| T003 | Persistência e API de dívidas | in-review | [#3](https://github.com/giovannivarela/openmonetis-v2/pull/3) |
 | T004 | Tela de dívidas | inbox | variantes de layout antes do código |
 | T005 | Parcela como despesa + Compromissos futuros | inbox | depende de T003 |
 | T006 | Adaptador Bradesco | blocked | aguardando extrato de exemplo |

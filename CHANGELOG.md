@@ -17,6 +17,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   primeiro é o Demonstrativo Descritivo de Crédito (DDC) do Itaú. O extrato lido vira a entrada do
   motor, com as regras de encargos deduzidas da projeção do próprio banco.
 - API: extração das linhas de texto de PDFs com `pdfjs-dist` 6.4.299.
+- API: dívidas importadas de extratos em PDF (`/debts`), com resumo, cronograma recalculado pelo motor
+  a partir do extrato mais recente, hipótese de correção da projeção e uma trava que recusa
+  extratos cujas parcelas o motor não reproduz.
+- Banco de dados: tabelas `debts` e `debt_statements` (migration `0032_debts.sql`).
 
 ## [0.17.1] - 2026-11-11
 
