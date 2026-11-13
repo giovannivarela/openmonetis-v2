@@ -50,8 +50,8 @@ export function CommitmentsPage({ filters, onChange }: Props) {
               maxMonths={maxCommitmentMonths}
             />
             <p className="text-muted-foreground text-xs sm:max-w-md">
-              Considera parcelas, recorrências e despesas avulsas lançadas, descontando estornos.
-              Receita prevista: recorrentes e lançadas.
+              Considera parcelas, recorrências, financiamentos e despesas avulsas lançadas,
+              descontando estornos. Receita prevista: recorrentes e lançadas.
             </p>
           </section>
           {reportQuery.isError ? (

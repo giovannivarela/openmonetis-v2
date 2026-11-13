@@ -29,6 +29,7 @@ export function CommitmentsTable({ report }: { report: CommitmentsOutput }) {
             <TableHead className="font-mono">Mês</TableHead>
             <TableHead className="font-mono text-right">Parcelas</TableHead>
             <TableHead className="font-mono text-right">Recorrentes</TableHead>
+            <TableHead className="font-mono text-right">Financiamentos</TableHead>
             <TableHead className="font-mono text-right">Contas avulsas</TableHead>
             {hasCredits ? (
               <TableHead className="font-mono text-right">Estornos e descontos</TableHead>
@@ -49,6 +50,9 @@ export function CommitmentsTable({ report }: { report: CommitmentsOutput }) {
               </TableCell>
               <TableCell className="text-right">
                 <MoneyValue amount={month.recurringAmount} />
+              </TableCell>
+              <TableCell className="text-right">
+                <MoneyValue amount={month.debtsAmount} />
               </TableCell>
               <TableCell className="text-right">
                 <MoneyValue amount={month.billsAmount} />

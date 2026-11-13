@@ -30,6 +30,19 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   extrato é reimportado ou a correção muda e nunca alteram as parcelas já pagas.
 - Banco de dados: ligação de lançamentos com parcelas de dívida e configuração do lançamento na
   dívida (migration `0033_debt_expenses.sql`).
+- Compromissos futuros: camada **Financiamentos**, com as parcelas de dívidas lançadas, separada
+  das contas avulsas. O fim de um financiamento entra no cálculo do primeiro mês de alívio.
+
+### Notas de atualização
+
+- Banco: as migrations `0032_debts.sql` e `0033_debt_expenses.sql` criam as tabelas `debts` e
+  `debt_statements` e acrescentam colunas opcionais em `debts` e `transactions`
+  (`debt_id`, `debt_installment_number`), sem alterar dados existentes. Faça backup antes de
+  atualizar e acompanhe `docker compose logs migrator`.
+- API: novas rotas `GET /debts`, `POST /debts/imports`, `GET`/`PATCH`/`DELETE /debts/{id}` e
+  `PUT`/`DELETE /debts/{id}/expenses`. `GET /reports/commitments` ganha `debtsAmount` em cada mês;
+  despesas lançadas por dívidas saem de `billsAmount`. Nenhum campo existente foi removido.
+- Ambiente e Compose: sem mudanças. A API passa a depender de `pdfjs-dist` 6.4.299.
 
 ## [0.17.1] - 2026-11-11
 

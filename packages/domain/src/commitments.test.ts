@@ -175,3 +175,45 @@ test("commitment month count is inclusive and handles year boundaries", () => {
   assert.equal(countCommitmentMonths("2026-10", "2027-03"), 6);
   assert.equal(countCommitmentMonths("2026-10", "2026-09"), 0);
 });
+
+test("an installment launched by a debt counts as financing, not as a single bill", () => {
+  const report = calculateCommitments({
+    period: "2026-11",
+    months: 1,
+    installmentRows: [installmentRow(2, "2026-11")],
+    recurringRules: [rule("income", "5000")],
+    singleEntries: [
+      { period: "2026-11", type: "expense", origin: "regular", amount: "-2000", debtId: "debt-1" },
+      { period: "2026-11", type: "expense", origin: "regular", amount: "-50" },
+    ],
+  });
+
+  const [month] = report.months;
+  assert.equal(month?.debtsAmount, 2000);
+  assert.equal(month?.billsAmount, 50);
+  assert.equal(month?.committedAmount, 100 + 2000 + 50);
+});
+
+test("the end of a financing is a relief, unlike single bills not launched yet", () => {
+  const installment = (period: string) => ({
+    period,
+    type: "expense" as const,
+    origin: "regular" as const,
+    amount: "-2000",
+    debtId: "debt-1",
+  });
+  const report = calculateCommitments({
+    period: "2026-10",
+    months: 3,
+    installmentRows: [],
+    recurringRules: [rule("income", "5000")],
+    singleEntries: [installment("2026-10"), installment("2026-11")],
+  });
+
+  assert.deepEqual(report.relief, {
+    period: "2026-12",
+    previousPeriod: "2026-11",
+    releasedAmount: 2000,
+    percentage: 100,
+  });
+});

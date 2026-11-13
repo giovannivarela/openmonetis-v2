@@ -2,21 +2,25 @@
 
 Single source of truth for status. See `README.md` for how the system works.
 
-**In flow now:** — (T001–T005 em revisão; próxima: T007)
+**In flow now:** — (E01 em revisão final: T001–T005 e T007; T006 aguarda o PDF do Bradesco)
+
+**Also in flow:** T010, carga do histórico para trás (setembro/2026 aguarda os PDFs). T009 concluído.
 
 ---
 
 ## Now / Next / Later
 
 ### Now
-- **E01 — Dívidas: financiamento com leitura de extrato** (T001–T004 em revisão)
+- **E01 — Dívidas: financiamento com leitura de extrato** (T001–T005 e T007 em revisão)
+- **E04 — Carga do histórico:** extratos e faturas em PDF nas contas reais, de outubro/2026 para trás
 
 ### Next
+- E05 — Conciliação na importação: parcela de financiamento, pagamento de fatura e transferências entre contas próprias
 - E02 — Simulações de dívida: descontos, quitação e extras futuras
 - E03 — Financiamento estudantil: IPCA semestral
 
 ### Later
-_Empty._
+- —
 
 ---
 
@@ -27,6 +31,8 @@ _Empty._
 | E01 | [Dívidas: financiamento com leitura de extrato](epics/E01-debts.md) | P1 | in-flow | 0/6 |
 | E02 | Simulações de dívida (área de descontos) | P2 | inbox | — |
 | E03 | Financiamento estudantil (IPCA semestral) | P2 | inbox | — |
+| E04 | [Carga do histórico](epics/E04-history-load.md) | P1 | in-flow | 1/3 |
+| E05 | [Conciliação na importação de extratos](epics/E05-import-reconciliation.md) | P2 | inbox | 0/1 |
 
 ---
 
@@ -39,6 +45,9 @@ _Empty._
 | T003 | [Persistência e API de dívidas](tasks/T003-debts-persistence-api.md) | E01 | in-review | este arquivo | [#3](https://github.com/giovannivarela/openmonetis-v2/pull/3) |
 | T004 | [Tela de dívidas (lista e detalhe)](tasks/T004-debts-screen.md) | E01 | in-review | este arquivo | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
 | T005 | [Parcelas da dívida como lançamentos](tasks/T005-debt-installment-expenses.md) | E01 | in-review | este arquivo | [#5](https://github.com/giovannivarela/openmonetis-v2/pull/5) |
-| T007 | Camada "Financiamentos" em Compromissos futuros | E01 | ready | — | — |
-| T008 | Dedup das parcelas com o extrato importado da conta | E01 | inbox | — | — |
+| T007 | [Camada "Financiamentos" em Compromissos futuros](tasks/T007-debts-commitments-layer.md) | E01 | in-review | este arquivo | [#6](https://github.com/giovannivarela/openmonetis-v2/pull/6) |
+| T008 | Dedup das parcelas com o extrato importado da conta | E05 | inbox | — | — |
 | T006 | Adaptador Bradesco | E01 | blocked | — | — |
+| T009 | [Piloto: carga de outubro/2026](tasks/T009-history-pilot-october.md) | E04 | done | este arquivo | — |
+| T010 | [Carga para trás, mês a mês](tasks/T010-history-backfill.md) | E04 | in-flow | — | — |
+| T011 | [Parcela inicial do cartão evidente e corrigível](tasks/T011-card-start-installment.md) | E04 | inbox | — | — |

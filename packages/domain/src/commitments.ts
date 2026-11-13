@@ -37,12 +37,15 @@ export type CommitmentSingleEntry = {
   type: "income" | "expense";
   origin: TransactionOrigin;
   amount: string | number;
+  /** Set when the entry is an installment launched by a debt: it counts as financing. */
+  debtId?: string | null;
 };
 
 export type CommitmentMonth = {
   period: string;
   installmentsAmount: number;
   recurringAmount: number;
+  debtsAmount: number;
   billsAmount: number;
   creditsAmount: number;
   committedAmount: number;
@@ -103,7 +106,10 @@ export function calculateCommitments(input: {
   const totals = new Map(
     periods.map((period) => [
       period,
-      { installments: 0, recurring: 0, bills: 0, credits: 0, income: 0 } as Record<string, number>,
+      { installments: 0, recurring: 0, debts: 0, bills: 0, credits: 0, income: 0 } as Record<
+        string,
+        number
+      >,
     ]),
   );
   const add = (period: string, key: string, cents: number) => {
@@ -154,14 +160,14 @@ export function calculateCommitments(input: {
     }
     const impactCents = Math.round(calculateExpenseImpact(entry) * 100);
     if (impactCents < 0) add(entry.period, "credits", -impactCents);
-    else add(entry.period, "bills", impactCents);
+    else add(entry.period, entry.debtId ? "debts" : "bills", impactCents);
   }
 
   const months = periods.map((period): CommitmentMonth => {
     const total = totals.get(period) as Record<string, number>;
     const committedCents = Math.max(
       0,
-      total.installments + total.recurring + total.bills - total.credits,
+      total.installments + total.recurring + total.debts + total.bills - total.credits,
     );
     const percentage =
       total.income > 0 ? Math.round((committedCents / total.income) * 1000) / 10 : null;
@@ -169,6 +175,7 @@ export function calculateCommitments(input: {
       period,
       installmentsAmount: total.installments / 100,
       recurringAmount: total.recurring / 100,
+      debtsAmount: total.debts / 100,
       billsAmount: total.bills / 100,
       creditsAmount: total.credits / 100,
       committedAmount: committedCents / 100,
@@ -205,13 +212,16 @@ export function calculateCommitments(input: {
 }
 
 /**
- * First month in which the structural commitments (installments and recurring series) drop
- * relevantly versus the previous month. Single bills are left out: future months rarely have
- * them launched yet, so including them would report reliefs that are only missing data.
+ * First month in which the structural commitments (installments, recurring series and financing)
+ * drop relevantly versus the previous month. Single bills are left out: future months rarely have
+ * them launched yet, so including them would report reliefs that are only missing data. Financing
+ * installments are launched for every month ahead, so the end of one is a real relief.
  */
 function findRelief(months: readonly CommitmentMonth[]): CommitmentRelief | null {
   const structuralCents = (month: CommitmentMonth) =>
-    Math.round(month.installmentsAmount * 100) + Math.round(month.recurringAmount * 100);
+    Math.round(month.installmentsAmount * 100) +
+    Math.round(month.recurringAmount * 100) +
+    Math.round(month.debtsAmount * 100);
   for (let index = 1; index < months.length; index += 1) {
     const previous = months[index - 1] as CommitmentMonth;
     const current = months[index] as CommitmentMonth;

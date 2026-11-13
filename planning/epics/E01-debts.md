@@ -45,8 +45,8 @@ futuros.
 | T003 | Persistência e API de dívidas | in-review | [#3](https://github.com/giovannivarela/openmonetis-v2/pull/3) |
 | T004 | Tela de dívidas | in-review | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
 | T005 | Parcelas da dívida como lançamentos | in-review | [#5](https://github.com/giovannivarela/openmonetis-v2/pull/5) |
-| T007 | Camada "Financiamentos" em Compromissos futuros | ready | depende de T005; separa as parcelas de "Contas avulsas" |
-| T008 | Dedup das parcelas com o extrato importado da conta | inbox | gatilho: o débito da parcela chegar pela importação do extrato (ou conexão bancária); casar o débito importado com a parcela pendente e dar baixa nela, em vez de criar outro lançamento |
+| T007 | Camada "Financiamentos" em Compromissos futuros | in-review | [#6](https://github.com/giovannivarela/openmonetis-v2/pull/6) |
+| T008 | Dedup das parcelas com o extrato importado da conta | moved | movida para o [E05](E05-import-reconciliation.md), junto com pagamento de fatura e transferências |
 | T006 | Adaptador Bradesco | blocked | aguardando extrato de exemplo |
 
 ## Dependencies
@@ -72,3 +72,20 @@ futuros.
   ponto de extensão com um adaptador por banco (T002 com Itaú, T006 com Bradesco).
 - 2026-11-12 — Ordem aprovada: motor → leitor → persistência/API → tela → integração. O leitor
   passou para antes da persistência, para que o schema nasça do modelo canônico.
+
+## Checkpoint (2026-11-13)
+- Validado localmente pelo usuário: tela, parcelas em Lançamentos e Compromissos futuros.
+- Revisão única do épico feita, com 8 achados corrigidos:
+  - exclusão de conta arquivada com parcelas configuradas;
+  - conta arquivada;
+  - conflito de gravação;
+  - limite de requisições;
+  - mensagens em inglês;
+  - edição manual documentada;
+  - privacidade do texto do gráfico;
+  - parcela buscada pelo número.
+- Contribuição ao repositório original: PRs estão desativados lá, então a proposta foi aberta como
+  issue (https://github.com/felipegcoutinho/openmonetis-v2/issues/3), apontando para o branch
+  `contrib/debts` (8 commits coesos, sem `planning/` nem `CLAUDE.md`).
+- Seguem fora: T006 (aguarda PDF do Bradesco), E04 (histórico de cartão), E05 (conciliação na
+  importação, com a T008).
