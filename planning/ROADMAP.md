@@ -4,7 +4,7 @@ Single source of truth for status. See `README.md` for how the system works.
 
 **In flow now:** — (E01 em revisão final: T001–T005 e T007; T006 aguarda o PDF do Bradesco)
 
-**Next up:** T009, o piloto da carga do histórico (aguarda os PDFs de outubro)
+**Also in flow:** T009, o piloto da carga do histórico (parte 1 pronta para importar; parte 2 aguarda os PDFs restantes)
 
 ---
 
@@ -48,6 +48,6 @@ Single source of truth for status. See `README.md` for how the system works.
 | T007 | [Camada "Financiamentos" em Compromissos futuros](tasks/T007-debts-commitments-layer.md) | E01 | in-review | este arquivo | [#6](https://github.com/giovannivarela/openmonetis-v2/pull/6) |
 | T008 | Dedup das parcelas com o extrato importado da conta | E05 | inbox | — | — |
 | T006 | Adaptador Bradesco | E01 | blocked | — | — |
-| T009 | [Piloto: carga de outubro/2026](tasks/T009-history-pilot-october.md) | E04 | refining | este arquivo | — |
+| T009 | [Piloto: carga de outubro/2026](tasks/T009-history-pilot-october.md) | E04 | in-flow | este arquivo | — |
 | T010 | [Carga para trás, mês a mês](tasks/T010-history-backfill.md) | E04 | inbox | — | — |
 | T011 | [Parcela inicial do cartão evidente e corrigível](tasks/T011-card-start-installment.md) | E04 | inbox | — | — |

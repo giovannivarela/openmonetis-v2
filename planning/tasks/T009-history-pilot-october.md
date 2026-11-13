@@ -1,6 +1,6 @@
 # T009: Piloto: carga de outubro/2026
 
-- **Status:** refining
+- **Status:** in-flow
 - **Epic:** E04 — Carga do histórico
 - **Spec:** este arquivo
 - **PR:** — (operação de dados, sem código de produto)
@@ -27,7 +27,7 @@ antes de voltar no tempo. O piloto também prova o roteiro do E04.
 - Automatizar a carga (decidido depois do piloto).
 
 ## Acceptance criteria
-- [ ] Backup feito antes da carga, e restauração testada num banco separado.
+- [x] Backup feito antes da carga, e restauração testada num banco separado.
 - [ ] O saldo de cada conta em 31/10/2026 é igual ao saldo final do extrato, centavo a centavo.
 - [ ] Toda fatura com vencimento em outubro foi paga pelo valor cheio, igual ao débito no extrato
       da conta. Nenhuma ficou em aberto.
@@ -42,9 +42,15 @@ antes de voltar no tempo. O piloto também prova o roteiro do E04.
 ## Definition of Ready
 - [x] Single coherent outcome (operação de dados: não passa por `/flow`)
 - [x] Testable acceptance criteria written (conferência de saldos)
-- [ ] Dependencies resolved or sequenced (aguarda os arquivos)
+- [x] Dependencies resolved or sequenced (parte 1 com os arquivos recebidos)
 - [x] Has a spec (este arquivo)
 - [x] Scope and non-goals explicit
 
 ## Log
 - 2026-11-13 — Criado. Opção A: conversão local, carga pela tela.
+- 2026-11-13 — Parte 1 preparada com o primeiro lote de arquivos (um extrato de conta e uma fatura):
+  - backup e restauração testada; segredos e backups na pasta privada; volume mantido;
+  - quatro planilhas de importação conferidas contra os totais dos PDFs, centavo a centavo;
+  - roteiro passo a passo e relatório de diferenças com a planilha, ambos privados.
+  A parte 2 aguarda os extratos e faturas restantes de outubro. Uma fatura veio com senha; a cópia
+  sem senha substituiu a original.
