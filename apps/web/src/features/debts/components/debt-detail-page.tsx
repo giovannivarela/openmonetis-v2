@@ -205,7 +205,7 @@ function DebtDetail({ debt }: { debt: DebtDetailOutput }) {
         />
       </section>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-3 lg:items-stretch">
         <Card className="min-w-0 gap-4 px-5 py-5 sm:px-6 lg:col-span-2">
           <div className="grid gap-0.5">
             <h2 className="font-heading font-medium text-base">Para onde vai cada parcela</h2>
@@ -231,7 +231,9 @@ function DebtDetail({ debt }: { debt: DebtDetailOutput }) {
                 : "Valores pagos além das parcelas."}
             </p>
           </div>
-          <DebtExtrasList extras={debt.extraAmortizations} />
+          <div className="relative lg:min-h-0 lg:flex-1">
+            <DebtExtrasList extras={debt.extraAmortizations} />
+          </div>
         </Card>
       </div>
 
