@@ -153,8 +153,18 @@ como despesas pendentes. `DELETE /debts/{id}/expenses` para de lançar.
 - **Ligação:** `transactions.debt_id` e `transactions.debt_installment_number`, únicos por dívida.
   Parar de lançar ou excluir a dívida remove as pendentes. As pagas ficam; ao excluir a dívida,
   perdem a ligação.
-- **Erros:** `account_not_found` (conta de outra pessoa ou arquivada), `category_not_found`,
-  `category_not_expense` e `debt_paid_off` (sem parcelas a vencer).
+- **Erros:**
+  - `account_not_found`: conta de outra pessoa ou arquivada;
+  - `category_not_found` e `category_not_expense`;
+  - `debt_paid_off`: sem parcelas a vencer;
+  - `debt_expenses_conflict` (409): duas gravações simultâneas da mesma dívida.
+  Ativar ou alterar tem limite de 20 por minuto por pessoa.
+- **Conta arquivada:** enquanto a conta escolhida estiver arquivada, a sincronização não roda.
+  Escolha outra conta em "Alterar" para retomar. Excluir a conta remove os lançamentos dela e
+  desativa o lançamento das parcelas na dívida.
+- **Edição manual:** os lançamentos pendentes pertencem à dívida. Um valor, nome, conta ou
+  categoria editado à mão volta ao da dívida na próxima sincronização, e uma parcela pendente
+  excluída à mão é recriada. Para tirar as parcelas de Lançamentos, use "Parar de lançar".
 - **Limitação:** o débito da parcela que chega pela importação do extrato da conta ainda vira outro
   lançamento. O dedup das duas fontes é a T008.
 

@@ -37,7 +37,7 @@ import type {
   ImportDebtStatementInput,
   UpdateDebtInput,
 } from "@openmonetis/validators/debts";
-import { badRequest, notFound } from "../utils/errors";
+import { badRequest, conflict, notFound } from "../utils/errors";
 import { extractPdfTextLines, PdfTextError } from "../utils/pdf-text-lines";
 
 export type DebtRecord = {
@@ -116,6 +116,25 @@ export type DebtsRepository = {
   /** Removes the pending expenses and clears the settings; paid expenses stay. */
   disableInstallmentExpenses(debtId: string, userId: string): Promise<void>;
 };
+
+/** Raised by the repository when two launches of the same debt race for the same installment. */
+export class DebtExpensesConflictError extends Error {
+  constructor() {
+    super("Debt installment expenses changed concurrently");
+  }
+}
+
+async function translateExpensesConflict(write: () => Promise<void>) {
+  try {
+    await write();
+  } catch (error) {
+    if (!(error instanceof DebtExpensesConflictError)) throw error;
+    throw conflict(
+      "The installment expenses changed meanwhile; reload and try again",
+      "debt_expenses_conflict",
+    );
+  }
+}
 
 export type PdfTextReader = (pdf: Uint8Array) => Promise<string[]>;
 
@@ -293,25 +312,31 @@ export function createDebtsService(
       fromInstallment: settings.fromInstallment,
     });
     const namePrefix = debtInstallmentExpenseNamePrefix(record.name);
-    await repository.saveInstallmentExpenses({
-      userId: record.userId,
-      debtId: record.id,
-      personId,
-      settings,
-      namePrefix,
-      create: plan.create.map((installment) => ({
-        ...expenseWrite(installment, settings.paymentMethod),
-        name: `${namePrefix}${installment.number}`,
-      })),
-      update: plan.update.map(({ id, installment }) => ({
-        id,
-        ...expenseWrite(installment, settings.paymentMethod),
-      })),
-      remove: plan.remove,
-    });
+    await translateExpensesConflict(() =>
+      repository.saveInstallmentExpenses({
+        userId: record.userId,
+        debtId: record.id,
+        personId,
+        settings,
+        namePrefix,
+        create: plan.create.map((installment) => ({
+          ...expenseWrite(installment, settings.paymentMethod),
+          name: `${namePrefix}${installment.number}`,
+        })),
+        update: plan.update.map(({ id, installment }) => ({
+          id,
+          ...expenseWrite(installment, settings.paymentMethod),
+        })),
+        remove: plan.remove,
+      }),
+    );
   }
 
-  /** Re-syncs after the schedule or the name changed; a debt without expenses is left alone. */
+  /**
+   * Re-syncs after the schedule or the name changed. A debt without expenses is left alone, and so
+   * is one whose account was archived: nothing new is launched there until another account is
+   * chosen ("Alterar"), which syncs again.
+   */
   async function resyncExpenses(record: DebtRecord) {
     if (!record.expenses) return;
     const target = await repository.findExpenseTarget(
@@ -319,6 +344,7 @@ export function createDebtsService(
       record.expenses.accountId,
       record.expenses.categoryId,
     );
+    if (!target.account || target.account.archived) return;
     await syncExpenses(record, record.expenses, target.adminPersonId);
   }
 
@@ -409,16 +435,16 @@ export function createDebtsService(
       const record = await requireDebt(id, userId);
       const target = await repository.findExpenseTarget(userId, input.accountId, input.categoryId);
       if (!target.account || target.account.archived) {
-        throw notFound("Conta não encontrada.", "account_not_found");
+        throw notFound("Account not found", "account_not_found");
       }
-      if (!target.category) throw notFound("Categoria não encontrada.", "category_not_found");
+      if (!target.category) throw notFound("Category not found", "category_not_found");
       if (target.category.type !== "expense") {
-        throw badRequest("Escolha uma categoria de despesa.", "category_not_expense");
+        throw badRequest("The category must be an expense category", "category_not_expense");
       }
       const next = scheduleOf(record).find((row) => row.dueDate > today());
       const fromInstallment = record.expenses?.fromInstallment ?? next?.number;
       if (fromInstallment === undefined) {
-        throw badRequest("Esta dívida não tem parcelas a vencer.", "debt_paid_off");
+        throw badRequest("The debt has no installment left to pay", "debt_paid_off");
       }
       await syncExpenses(record, { ...input, fromInstallment }, target.adminPersonId);
       return await detail(await requireDebt(id, userId));

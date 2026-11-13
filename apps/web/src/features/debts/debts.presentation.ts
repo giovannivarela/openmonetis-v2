@@ -260,6 +260,8 @@ const expensesErrorMessages: Record<string, string> = {
   category_not_found: "Escolha uma categoria de despesa.",
   category_not_expense: "Escolha uma categoria de despesa.",
   debt_paid_off: "Esta dívida não tem parcelas a vencer.",
+  debt_expenses_conflict: "As parcelas mudaram enquanto você salvava. Tente de novo.",
+  rate_limited: "Muitas alterações seguidas. Aguarde um minuto e tente de novo.",
 };
 
 export function debtExpensesErrorMessage(code: string | undefined) {

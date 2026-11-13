@@ -2,6 +2,7 @@ import {
   cards,
   categories,
   db,
+  debts,
   financialAccounts,
   goals,
   installmentSeries,
@@ -293,6 +294,19 @@ export const accountsRepository = {
             );
         }
       }
+
+      // Debts that launched installments into this account stop launching; their expenses were
+      // removed with the account's transactions above.
+      await transaction
+        .update(debts)
+        .set({
+          expenseAccountId: null,
+          expenseCategoryId: null,
+          expensePaymentMethod: null,
+          expenseFromInstallment: null,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(debts.userId, userId), eq(debts.expenseAccountId, id)));
 
       await transaction
         .delete(financialAccounts)

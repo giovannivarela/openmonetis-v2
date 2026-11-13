@@ -8,7 +8,12 @@ import {
   transactions,
 } from "@openmonetis/db";
 import { and, asc, desc, eq, inArray, isNotNull, not, sql } from "drizzle-orm";
-import type { DebtExpenseSettings, DebtRecord, DebtsRepository } from "../services/debts.service";
+import {
+  type DebtExpenseSettings,
+  DebtExpensesConflictError,
+  type DebtRecord,
+  type DebtsRepository,
+} from "../services/debts.service";
 
 const debtColumns = {
   id: debts.id,
@@ -118,6 +123,73 @@ async function findByIdForUser(id: string, userId: string) {
   return record ?? null;
 }
 
+type SaveInstallmentExpensesInput = Parameters<DebtsRepository["saveInstallmentExpenses"]>[0];
+
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  if ("code" in error && error.code === "23505") return true;
+  return "cause" in error && isUniqueViolation(error.cause);
+}
+
+/** Settings, planned changes and the retarget of pending expenses, all in one transaction. */
+function saveInstallmentExpensesInTransaction(data: SaveInstallmentExpensesInput) {
+  return db.transaction(async (transaction) => {
+    const pending = pendingExpensesOf(data.debtId, data.userId);
+    await transaction
+      .update(debts)
+      .set({ ...expenseSettingsColumns(data.settings), updatedAt: new Date() })
+      .where(and(eq(debts.id, data.debtId), eq(debts.userId, data.userId)));
+    if (data.remove.length > 0) {
+      await transaction
+        .delete(transactions)
+        .where(and(pending, inArray(transactions.id, data.remove)));
+    }
+    for (const expense of data.update) {
+      await transaction
+        .update(transactions)
+        .set({
+          amount: expense.amount,
+          purchaseDate: toDate(expense.dueDate),
+          dueDate: toDate(expense.dueDate),
+          period: expense.period,
+          updatedAt: new Date(),
+        })
+        .where(and(pending, eq(transactions.id, expense.id)));
+    }
+    if (data.create.length > 0) {
+      await transaction.insert(transactions).values(
+        data.create.map((expense) => ({
+          userId: data.userId,
+          personId: data.personId,
+          type: "expense" as const,
+          origin: "regular" as const,
+          condition: "single" as const,
+          paymentMethod: data.settings.paymentMethod,
+          name: expense.name,
+          amount: expense.amount,
+          purchaseDate: toDate(expense.dueDate),
+          period: expense.period,
+          accountId: data.settings.accountId,
+          categoryId: data.settings.categoryId,
+          dueDate: toDate(expense.dueDate),
+          isSettled: false,
+          debtId: data.debtId,
+          debtInstallmentNumber: expense.installmentNumber,
+        })),
+      );
+    }
+    await transaction
+      .update(transactions)
+      .set({
+        accountId: data.settings.accountId,
+        categoryId: data.settings.categoryId,
+        paymentMethod: data.settings.paymentMethod,
+        name: sql`${data.namePrefix} || ${transactions.debtInstallmentNumber}::text`,
+      })
+      .where(pending);
+  });
+}
+
 export const debtsRepository = {
   async listByUser(userId) {
     const rows = await db
@@ -223,62 +295,13 @@ export const debtsRepository = {
       settled: row.isSettled === true,
     }));
   },
-  saveInstallmentExpenses(data) {
-    return db.transaction(async (transaction) => {
-      const pending = pendingExpensesOf(data.debtId, data.userId);
-      await transaction
-        .update(debts)
-        .set({ ...expenseSettingsColumns(data.settings), updatedAt: new Date() })
-        .where(and(eq(debts.id, data.debtId), eq(debts.userId, data.userId)));
-      if (data.remove.length > 0) {
-        await transaction
-          .delete(transactions)
-          .where(and(pending, inArray(transactions.id, data.remove)));
-      }
-      for (const expense of data.update) {
-        await transaction
-          .update(transactions)
-          .set({
-            amount: expense.amount,
-            purchaseDate: toDate(expense.dueDate),
-            dueDate: toDate(expense.dueDate),
-            period: expense.period,
-            updatedAt: new Date(),
-          })
-          .where(and(pending, eq(transactions.id, expense.id)));
-      }
-      if (data.create.length > 0) {
-        await transaction.insert(transactions).values(
-          data.create.map((expense) => ({
-            userId: data.userId,
-            personId: data.personId,
-            type: "expense" as const,
-            origin: "regular" as const,
-            condition: "single" as const,
-            paymentMethod: data.settings.paymentMethod,
-            name: expense.name,
-            amount: expense.amount,
-            purchaseDate: toDate(expense.dueDate),
-            period: expense.period,
-            accountId: data.settings.accountId,
-            categoryId: data.settings.categoryId,
-            dueDate: toDate(expense.dueDate),
-            isSettled: false,
-            debtId: data.debtId,
-            debtInstallmentNumber: expense.installmentNumber,
-          })),
-        );
-      }
-      await transaction
-        .update(transactions)
-        .set({
-          accountId: data.settings.accountId,
-          categoryId: data.settings.categoryId,
-          paymentMethod: data.settings.paymentMethod,
-          name: sql`${data.namePrefix} || ${transactions.debtInstallmentNumber}::text`,
-        })
-        .where(pending);
-    });
+  async saveInstallmentExpenses(data) {
+    try {
+      await saveInstallmentExpensesInTransaction(data);
+    } catch (error) {
+      if (isUniqueViolation(error)) throw new DebtExpensesConflictError();
+      throw error;
+    }
   },
   disableInstallmentExpenses(debtId, userId) {
     return db.transaction(async (transaction) => {
