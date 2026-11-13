@@ -46,7 +46,7 @@ futuros.
 | T004 | Tela de dívidas | in-review | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
 | T005 | Parcelas da dívida como lançamentos | in-review | [#5](https://github.com/giovannivarela/openmonetis-v2/pull/5) |
 | T007 | Camada "Financiamentos" em Compromissos futuros | in-review | [#6](https://github.com/giovannivarela/openmonetis-v2/pull/6) |
-| T008 | Dedup das parcelas com o extrato importado da conta | inbox | gatilho: o débito da parcela chegar pela importação do extrato (ou conexão bancária); casar o débito importado com a parcela pendente e dar baixa nela, em vez de criar outro lançamento |
+| T008 | Dedup das parcelas com o extrato importado da conta | moved | movida para o [E05](E05-import-reconciliation.md), junto com pagamento de fatura e transferências |
 | T006 | Adaptador Bradesco | blocked | aguardando extrato de exemplo |
 
 ## Dependencies

@@ -2,7 +2,7 @@
 
 Single source of truth for status. See `README.md` for how the system works.
 
-**In flow now:** — (T001–T005 e T007 em revisão; T006 e T008 aguardam gatilho)
+**In flow now:** — (E01 em revisão final: T001–T005 e T007; T006 aguarda o PDF do Bradesco)
 
 ---
 
@@ -12,6 +12,7 @@ Single source of truth for status. See `README.md` for how the system works.
 - **E01 — Dívidas: financiamento com leitura de extrato** (T001–T005 e T007 em revisão)
 
 ### Next
+- E05 — Conciliação na importação: parcela de financiamento, pagamento de fatura e transferências entre contas próprias
 - E02 — Simulações de dívida: descontos, quitação e extras futuras
 - E03 — Financiamento estudantil: IPCA semestral
 
@@ -28,6 +29,7 @@ Single source of truth for status. See `README.md` for how the system works.
 | E02 | Simulações de dívida (área de descontos) | P2 | inbox | — |
 | E03 | Financiamento estudantil (IPCA semestral) | P2 | inbox | — |
 | E04 | [Preenchimento histórico de cartão](epics/E04-card-history.md) | P3 | inbox | — |
+| E05 | [Conciliação na importação de extratos](epics/E05-import-reconciliation.md) | P2 | inbox | 0/1 |
 
 ---
 
@@ -41,5 +43,5 @@ Single source of truth for status. See `README.md` for how the system works.
 | T004 | [Tela de dívidas (lista e detalhe)](tasks/T004-debts-screen.md) | E01 | in-review | este arquivo | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
 | T005 | [Parcelas da dívida como lançamentos](tasks/T005-debt-installment-expenses.md) | E01 | in-review | este arquivo | [#5](https://github.com/giovannivarela/openmonetis-v2/pull/5) |
 | T007 | [Camada "Financiamentos" em Compromissos futuros](tasks/T007-debts-commitments-layer.md) | E01 | in-review | este arquivo | [#6](https://github.com/giovannivarela/openmonetis-v2/pull/6) |
-| T008 | Dedup das parcelas com o extrato importado da conta | E01 | inbox | — | — |
+| T008 | Dedup das parcelas com o extrato importado da conta | E05 | inbox | — | — |
 | T006 | Adaptador Bradesco | E01 | blocked | — | — |
