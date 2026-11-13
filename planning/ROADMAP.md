@@ -9,14 +9,14 @@ Single source of truth for status. See `README.md` for how the system works.
 ## Now / Next / Later
 
 ### Now
-- **E01 — Dívidas: financiamento com leitura de extrato** (T001–T004 em revisão)
+- **E01 — Dívidas: financiamento com leitura de extrato** (T001–T005 e T007 em revisão)
 
 ### Next
 - E02 — Simulações de dívida: descontos, quitação e extras futuras
 - E03 — Financiamento estudantil: IPCA semestral
 
 ### Later
-_Empty._
+- E04 — Preenchimento histórico de cartão: parcela inicial evidente e corrigível, histórico sem mexer no saldo
 
 ---
 
@@ -27,6 +27,7 @@ _Empty._
 | E01 | [Dívidas: financiamento com leitura de extrato](epics/E01-debts.md) | P1 | in-flow | 0/6 |
 | E02 | Simulações de dívida (área de descontos) | P2 | inbox | — |
 | E03 | Financiamento estudantil (IPCA semestral) | P2 | inbox | — |
+| E04 | [Preenchimento histórico de cartão](epics/E04-card-history.md) | P3 | inbox | — |
 
 ---
 
