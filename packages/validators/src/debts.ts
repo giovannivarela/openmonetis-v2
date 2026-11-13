@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { debtExpensePaymentMethods } from "@openmonetis/domain/debt-expenses";
 import {
   debtExtraAmortizationSources,
   debtStatementBanks,
@@ -45,6 +46,23 @@ export const UpdateDebtInputSchema = z
 
 export const DebtParamsSchema = z.object({ id: z.uuid() });
 
+/** Where the installments of a debt are launched as expenses. */
+export const DebtExpensesInputSchema = z
+  .object({
+    accountId: z.uuid(),
+    categoryId: z.uuid(),
+    paymentMethod: z.enum(debtExpensePaymentMethods),
+  })
+  .openapi("DebtExpensesInput");
+
+const DebtExpenseSettingsOutputSchema = z.object({
+  accountId: z.uuid(),
+  categoryId: z.uuid(),
+  paymentMethod: z.enum(debtExpensePaymentMethods),
+  /** First installment launched; earlier ones are left to the person's own records. */
+  fromInstallment: z.number().int(),
+});
+
 const amountSchema = z.number().finite();
 
 const DebtTotalsOutputSchema = z.object({
@@ -84,6 +102,7 @@ export const DebtOutputSchema = z
     nextInstallment: z
       .object({ number: z.number().int(), dueDate: z.iso.date(), amount: amountSchema })
       .nullable(),
+    expenses: DebtExpenseSettingsOutputSchema.nullable(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })
@@ -134,10 +153,13 @@ export const DebtDetailOutputSchema = DebtOutputSchema.extend({
   schedule: z.array(DebtScheduleRowOutputSchema),
   extraAmortizations: z.array(DebtExtraAmortizationOutputSchema),
   yearlyBreakdown: z.array(DebtScheduleYearOutputSchema),
+  /** Expenses launched for the installments: still pending and already paid. */
+  expenseCounts: z.object({ pending: z.number().int(), settled: z.number().int() }),
 }).openapi("DebtDetail");
 
 export type ImportDebtStatementInput = z.infer<typeof ImportDebtStatementInputSchema>;
 export type UpdateDebtInput = z.infer<typeof UpdateDebtInputSchema>;
+export type DebtExpensesInput = z.infer<typeof DebtExpensesInputSchema>;
 export type DebtOutput = z.infer<typeof DebtOutputSchema>;
 export type DebtDetailOutput = z.infer<typeof DebtDetailOutputSchema>;
 export type DebtScheduleRowOutput = z.infer<typeof DebtScheduleRowOutputSchema>;

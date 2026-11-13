@@ -1,3 +1,10 @@
+import {
+  type DebtExpensePaymentMethod,
+  type DebtExpenseRecord,
+  type DebtInstallmentForExpense,
+  debtInstallmentExpenseNamePrefix,
+  planDebtInstallmentExpenses,
+} from "@openmonetis/domain/debt-expenses";
 import { readDebtStatement } from "@openmonetis/domain/debt-statement-readers";
 import {
   type DebtStatement,
@@ -17,9 +24,14 @@ import {
   summarizeDebtScheduleYears,
 } from "@openmonetis/domain/debts";
 import { fromCents } from "@openmonetis/domain/money";
+import {
+  deriveTransactionPeriod,
+  normalizeTransactionAmount,
+} from "@openmonetis/domain/transactions";
 import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
 import type {
   DebtDetailOutput,
+  DebtExpensesInput,
   DebtOutput,
   DebtScheduleRowOutput,
   ImportDebtStatementInput,
@@ -36,10 +48,26 @@ export type DebtRecord = {
   statementFormat: string;
   contractReference: string;
   projectedMonthlyCorrectionRate: string;
+  expenses: DebtExpenseSettings | null;
   statementIssuedOn: string;
   statement: DebtStatement;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type DebtExpenseSettings = {
+  accountId: string;
+  categoryId: string;
+  paymentMethod: DebtExpensePaymentMethod;
+  fromInstallment: number;
+};
+
+/** The fields of an installment expense that follow the schedule. `amount` is signed. */
+export type DebtExpenseWrite = {
+  installmentNumber: number;
+  amount: string;
+  dueDate: string;
+  period: string;
 };
 
 export type DebtsRepository = {
@@ -59,7 +87,34 @@ export type DebtsRepository = {
     userId: string,
     data: { name?: string; projectedMonthlyCorrectionRate?: string },
   ): Promise<{ id: string } | null>;
+  /** Deletes the debt and its pending expenses; paid expenses stay, unlinked. */
   deleteForUser(id: string, userId: string): Promise<{ id: string } | null>;
+  findExpenseTarget(
+    userId: string,
+    accountId: string,
+    categoryId: string,
+  ): Promise<{
+    account: { archived: boolean } | null;
+    category: { type: "income" | "expense" } | null;
+    adminPersonId: string;
+  }>;
+  listInstallmentExpenses(debtId: string, userId: string): Promise<DebtExpenseRecord[]>;
+  /**
+   * In one transaction: saves the settings, removes, updates and creates the planned expenses,
+   * then points every pending expense at the settings and names it `namePrefix` + its number.
+   */
+  saveInstallmentExpenses(data: {
+    userId: string;
+    debtId: string;
+    personId: string;
+    settings: DebtExpenseSettings;
+    namePrefix: string;
+    create: Array<DebtExpenseWrite & { name: string }>;
+    update: Array<DebtExpenseWrite & { id: string }>;
+    remove: string[];
+  }): Promise<void>;
+  /** Removes the pending expenses and clears the settings; paid expenses stay. */
+  disableInstallmentExpenses(debtId: string, userId: string): Promise<void>;
 };
 
 export type PdfTextReader = (pdf: Uint8Array) => Promise<string[]>;
@@ -83,6 +138,25 @@ function invalidPdf() {
 
 function debtNotFound() {
   return notFound("Dívida não encontrada.", "debt_not_found");
+}
+
+/** The schedule fields an installment expense carries; the amount is a signed expense. */
+function expenseWrite(
+  installment: DebtInstallmentForExpense,
+  paymentMethod: DebtExpensePaymentMethod,
+) {
+  return {
+    installmentNumber: installment.number,
+    amount: normalizeTransactionAmount("expense", fromCents(installment.installmentCents)).toFixed(
+      2,
+    ),
+    dueDate: installment.dueDate,
+    period: deriveTransactionPeriod({
+      paymentMethod,
+      purchaseDate: installment.dueDate,
+      dueDate: installment.dueDate,
+    }),
+  };
 }
 
 function totalsOutput(totals: DebtTotals) {
@@ -162,13 +236,15 @@ export function createDebtsService(
       nextInstallment: next
         ? { number: next.number, dueDate: next.dueDate, amount: fromCents(next.installmentCents) }
         : null,
+      expenses: record.expenses,
       createdAt: record.createdAt.toISOString(),
       updatedAt: record.updatedAt.toISOString(),
     };
   }
 
-  function detail(record: DebtRecord): DebtDetailOutput {
+  async function detail(record: DebtRecord): Promise<DebtDetailOutput> {
     const rows = scheduleOf(record);
+    const launched = await repository.listInstallmentExpenses(record.id, record.userId);
     const { extraAmortizations } = record.statement;
     return {
       ...output(record, rows),
@@ -194,7 +270,53 @@ export function createDebtsService(
           remainingOnly: year.remainingOnly,
         }),
       ),
+      expenseCounts: {
+        pending: launched.filter((expense) => !expense.settled).length,
+        settled: launched.filter((expense) => expense.settled).length,
+      },
     };
+  }
+
+  /** Brings the debt's expenses in line with its schedule and settings. */
+  async function syncExpenses(record: DebtRecord, settings: DebtExpenseSettings, personId: string) {
+    const installments = scheduleOf(record).map((row) => ({
+      number: row.number,
+      dueDate: row.dueDate,
+      installmentCents: row.installmentCents,
+    }));
+    const plan = planDebtInstallmentExpenses({
+      installments,
+      existing: await repository.listInstallmentExpenses(record.id, record.userId),
+      fromInstallment: settings.fromInstallment,
+    });
+    const namePrefix = debtInstallmentExpenseNamePrefix(record.name);
+    await repository.saveInstallmentExpenses({
+      userId: record.userId,
+      debtId: record.id,
+      personId,
+      settings,
+      namePrefix,
+      create: plan.create.map((installment) => ({
+        ...expenseWrite(installment, settings.paymentMethod),
+        name: `${namePrefix}${installment.number}`,
+      })),
+      update: plan.update.map(({ id, installment }) => ({
+        id,
+        ...expenseWrite(installment, settings.paymentMethod),
+      })),
+      remove: plan.remove,
+    });
+  }
+
+  /** Re-syncs after the schedule or the name changed; a debt without expenses is left alone. */
+  async function resyncExpenses(record: DebtRecord) {
+    if (!record.expenses) return;
+    const target = await repository.findExpenseTarget(
+      record.userId,
+      record.expenses.accountId,
+      record.expenses.categoryId,
+    );
+    await syncExpenses(record, record.expenses, target.adminPersonId);
   }
 
   async function requireDebt(id: string, userId: string) {
@@ -240,7 +362,7 @@ export function createDebtsService(
     },
 
     async get(id: string, userId: string): Promise<DebtDetailOutput> {
-      return detail(await requireDebt(id, userId));
+      return await detail(await requireDebt(id, userId));
     },
 
     async importStatement(
@@ -258,7 +380,9 @@ export function createDebtsService(
         issuedOn: statement.issuedOn,
         statement,
       });
-      return detail(await requireDebt(id, userId));
+      const record = await requireDebt(id, userId);
+      await resyncExpenses(record);
+      return await detail(record);
     },
 
     async update(id: string, userId: string, input: UpdateDebtInput): Promise<DebtOutput> {
@@ -270,7 +394,37 @@ export function createDebtsService(
       });
       if (!updated) throw debtNotFound();
       const record = await requireDebt(updated.id, userId);
+      await resyncExpenses(record);
       return output(record, scheduleOf(record));
+    },
+
+    async enableExpenses(
+      id: string,
+      userId: string,
+      input: DebtExpensesInput,
+    ): Promise<DebtDetailOutput> {
+      const record = await requireDebt(id, userId);
+      const target = await repository.findExpenseTarget(userId, input.accountId, input.categoryId);
+      if (!target.account || target.account.archived) {
+        throw notFound("Conta não encontrada.", "account_not_found");
+      }
+      if (!target.category) throw notFound("Categoria não encontrada.", "category_not_found");
+      if (target.category.type !== "expense") {
+        throw badRequest("Escolha uma categoria de despesa.", "category_not_expense");
+      }
+      const next = scheduleOf(record).find((row) => row.dueDate > today());
+      const fromInstallment = record.expenses?.fromInstallment ?? next?.number;
+      if (fromInstallment === undefined) {
+        throw badRequest("Esta dívida não tem parcelas a vencer.", "debt_paid_off");
+      }
+      await syncExpenses(record, { ...input, fromInstallment }, target.adminPersonId);
+      return await detail(await requireDebt(id, userId));
+    },
+
+    async disableExpenses(id: string, userId: string): Promise<DebtDetailOutput> {
+      const record = await requireDebt(id, userId);
+      await repository.disableInstallmentExpenses(record.id, userId);
+      return await detail(await requireDebt(id, userId));
     },
 
     async remove(id: string, userId: string): Promise<{ id: string }> {

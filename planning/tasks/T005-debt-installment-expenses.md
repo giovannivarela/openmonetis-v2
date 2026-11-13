@@ -1,6 +1,6 @@
 # T005: Parcelas da dívida como lançamentos
 
-- **Status:** in-flow
+- **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo
 - **PR:** —
@@ -50,17 +50,17 @@ pendente por parcela, ligada à dívida.
 - Criar lançamentos para parcelas já vencidas antes de ativar.
 
 ## Acceptance criteria
-- [ ] Ativar cria uma despesa pendente por parcela a partir da próxima, com conta, categoria, forma
+- [x] Ativar cria uma despesa pendente por parcela a partir da próxima, com conta, categoria, forma
       de pagamento, vencimento e valor do cronograma, ligada à dívida. As parcelas aparecem em
       "Contas a pagar" (`payables=true`).
-- [ ] Reimportar ou mudar a correção atualiza só as pendentes. As baixadas não mudam, e as
+- [x] Reimportar ou mudar a correção atualiza só as pendentes. As baixadas não mudam, e as
       pendentes que saíram do cronograma são removidas.
-- [ ] Alterar conta, categoria ou forma de pagamento atualiza as pendentes.
-- [ ] Desativar ou excluir a dívida remove as pendentes e mantém as baixadas.
-- [ ] Conta ou categoria de outra pessoa, arquivada ou de receita é recusada. Uma dívida sem
+- [x] Alterar conta, categoria ou forma de pagamento atualiza as pendentes.
+- [x] Desativar ou excluir a dívida remove as pendentes e mantém as baixadas.
+- [x] Conta ou categoria de outra pessoa, arquivada ou de receita é recusada. Uma dívida sem
       parcelas futuras não pode ser ativada.
-- [ ] Testes de domain, service e integração com PostgreSQL. "Zerar dados" continua limpo.
-- [ ] `pnpm check`, `pnpm test` e `pnpm build` verdes; a tela conferida rodando.
+- [x] Testes de domain, service e integração com PostgreSQL. "Zerar dados" continua limpo.
+- [x] `pnpm check`, `pnpm test` e `pnpm build` verdes; a tela conferida rodando.
 
 ## Dependencies
 - T004 (PR #4). Este PR fica empilhado sobre o #4.
@@ -75,3 +75,18 @@ pendente por parcela, ligada à dívida.
 ## Log
 - 2026-11-13 — Lançamentos reais escolhidos em vez de expansão virtual. A camada em Compromissos
   virou a T007 e o dedup com o extrato, a T008.
+- 2026-11-13 — RED → GREEN em três frentes:
+  - domain: `planDebtInstallmentExpenses`, 5 testes;
+  - service: 6 testes (ativar, recusas, quitada, reprojeção, renomear, parar);
+  - presentation: 3 testes.
+  Os tipos de registro de lançamento ganharam os campos de dívida como opcionais, para o módulo
+  de lançamentos não depender de dívidas.
+- 2026-11-13 — Integração com PostgreSQL: dívidas 16/16, lançamentos 250/250, baixas, configurações
+  e migrations verdes. Cada arquivo de integração tem um único `withIntegrationDatabase`, então o
+  cenário das parcelas roda dentro do teste existente, com outra pessoa.
+- 2026-11-13 — Conferido rodando, no navegador:
+  - lançar sem escolher a conta mostra o aviso;
+  - lançar cria 137 pendentes a partir da 47, e a parcela aparece em dezembro/2026 como boleto
+    em aberto, com o vencimento ajustado pela regra de dias úteis (sábado → segunda);
+  - "Parar de lançar" remove todas.
+  Sem erros no console.

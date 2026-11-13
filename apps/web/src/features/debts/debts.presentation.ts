@@ -1,3 +1,7 @@
+import {
+  type DebtExpensePaymentMethod,
+  debtExpensePaymentMethods,
+} from "@openmonetis/domain/debt-expenses";
 import type {
   DebtExtraAmortizationSource,
   DebtStatementBank,
@@ -208,4 +212,43 @@ export function debtChargeLabel(code: string) {
 
 export function sumDebtCharges(row: Pick<DebtScheduleRowOutput, "charges">) {
   return Math.round(row.charges.reduce((sum, charge) => sum + charge.amount * 100, 0)) / 100;
+}
+
+const debtExpensePaymentMethodLabels: Record<DebtExpensePaymentMethod, string> = {
+  boleto: "Boleto",
+  debit_card: "Cartão de débito",
+  pix: "Pix",
+  bank_transfer: "Transferência bancária",
+};
+
+/** Same labels as the transactions screens; a credit card has its own invoice flow. */
+export const debtExpensePaymentMethodOptions = debtExpensePaymentMethods.map((value) => ({
+  value,
+  label: debtExpensePaymentMethodLabels[value],
+}));
+
+export function debtExpensePaymentMethodLabel(method: DebtExpensePaymentMethod) {
+  return debtExpensePaymentMethodLabels[method];
+}
+
+export function formatDebtExpenseCounts(counts: { pending: number; settled: number }) {
+  const parts = [
+    counts.pending > 0
+      ? `${counts.pending} ${counts.pending === 1 ? "parcela pendente" : "parcelas pendentes"}`
+      : null,
+    counts.settled > 0 ? `${counts.settled} ${counts.settled === 1 ? "paga" : "pagas"}` : null,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : "Nenhuma parcela lançada";
+}
+
+const genericExpensesError = "Não foi possível lançar as parcelas. Tente novamente.";
+const expensesErrorMessages: Record<string, string> = {
+  account_not_found: "Escolha uma conta ativa.",
+  category_not_found: "Escolha uma categoria de despesa.",
+  category_not_expense: "Escolha uma categoria de despesa.",
+  debt_paid_off: "Esta dívida não tem parcelas a vencer.",
+};
+
+export function debtExpensesErrorMessage(code: string | undefined) {
+  return (code && expensesErrorMessages[code]) || genericExpensesError;
 }
