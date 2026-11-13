@@ -44,7 +44,7 @@ futuros.
 | T002 | Leitor de extrato: modelo canônico + adaptador Itaú DDC | in-review | ponto de extensão por banco |
 | T003 | Persistência e API de dívidas | in-review | [#3](https://github.com/giovannivarela/openmonetis-v2/pull/3) |
 | T004 | Tela de dívidas | in-review | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
-| T005 | Parcelas da dívida como lançamentos | in-flow | lançamentos reais, ligados à dívida |
+| T005 | Parcelas da dívida como lançamentos | in-review | [#5](https://github.com/giovannivarela/openmonetis-v2/pull/5) |
 | T007 | Camada "Financiamentos" em Compromissos futuros | ready | depende de T005; separa as parcelas de "Contas avulsas" |
 | T008 | Dedup das parcelas com o extrato importado da conta | inbox | gatilho: o débito da parcela chegar pela importação do extrato (ou conexão bancária); casar o débito importado com a parcela pendente e dar baixa nela, em vez de criar outro lançamento |
 | T006 | Adaptador Bradesco | blocked | aguardando extrato de exemplo |

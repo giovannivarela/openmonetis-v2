@@ -3,7 +3,7 @@
 - **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo
-- **PR:** —
+- **PR:** https://github.com/giovannivarela/openmonetis-v2/pull/5 (empilhado sobre o #4)
 
 ## What & why
 Nem todo financiamento aparece como débito no extrato da conta. Para a parcela entrar no fluxo de
