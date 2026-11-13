@@ -1,6 +1,6 @@
 # T009: Piloto: carga de outubro/2026
 
-- **Status:** in-flow
+- **Status:** done
 - **Epic:** E04 — Carga do histórico
 - **Spec:** este arquivo
 - **PR:** — (operação de dados, sem código de produto)
@@ -28,12 +28,12 @@ antes de voltar no tempo. O piloto também prova o roteiro do E04.
 
 ## Acceptance criteria
 - [x] Backup feito antes da carga, e restauração testada num banco separado.
-- [ ] O saldo de cada conta em 31/10/2026 é igual ao saldo final do extrato, centavo a centavo.
-- [ ] Toda fatura com vencimento em outubro foi paga pelo valor cheio, igual ao débito no extrato
+- [x] O saldo de cada conta em 31/10/2026 é igual ao saldo final do extrato, centavo a centavo.
+- [x] Toda fatura com vencimento em outubro foi paga pelo valor cheio, igual ao débito no extrato
       da conta. Nenhuma ficou em aberto.
-- [ ] Nenhum pagamento de fatura nem transferência entre contas próprias foi contado como despesa.
-- [ ] Existe um relatório privado com a diferença de outubro entre os extratos e a planilha.
-- [ ] A validação no app termina em uma decisão: seguir para o T010, ajustar o roteiro ou
+- [x] Nenhum pagamento de fatura nem transferência entre contas próprias foi contado como despesa.
+- [x] Existe um relatório privado com a diferença de outubro entre os extratos e a planilha.
+- [x] A validação no app termina em uma decisão: seguir para o T010, ajustar o roteiro ou
       restaurar o backup.
 
 ## Dependencies
@@ -54,3 +54,7 @@ antes de voltar no tempo. O piloto também prova o roteiro do E04.
   - roteiro passo a passo e relatório de diferenças com a planilha, ambos privados.
   A parte 2 aguarda os extratos e faturas restantes de outubro. Uma fatura veio com senha; a cópia
   sem senha substituiu a original.
+- 2026-11-13 — Carga concluída (três contas, dois cartões, dez lotes). Conferência pelo banco:
+  saldos de 31/10 iguais aos extratos, as duas faturas pagas pelo valor cheio, transferências
+  como transferência. Um ajuste de abertura entrou com a data errada e foi refeito pela tela.
+  Validado no app; decisão: seguir para setembro (T010).

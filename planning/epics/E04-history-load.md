@@ -1,6 +1,6 @@
 # E04: Carga do histórico
 
-- **Status:** refining
+- **Status:** in-flow
 - **Priority:** P1
 - **Captured:** 2026-11-13, na validação local do E01, como "Preenchimento histórico de cartão".
   Ampliado no mesmo dia.
@@ -62,8 +62,8 @@ cada mês, para acompanhar a evolução desde o início. Do corte para a frente,
 ## Tasks
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| T009 | [Piloto: carga de outubro/2026](../tasks/T009-history-pilot-october.md) | refining | operação de dados, sem `/flow` |
-| T010 | [Carga para trás, mês a mês](../tasks/T010-history-backfill.md) | inbox | depois do T009 validado |
+| T009 | [Piloto: carga de outubro/2026](../tasks/T009-history-pilot-october.md) | done | operação de dados, sem `/flow` |
+| T010 | [Carga para trás, mês a mês](../tasks/T010-history-backfill.md) | in-flow | depois do T009 validado |
 | T011 | [Parcela inicial do cartão evidente e corrigível](../tasks/T011-card-start-installment.md) | inbox | produto, via `/flow` |
 
 ## Log
