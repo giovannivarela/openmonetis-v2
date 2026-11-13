@@ -3,7 +3,7 @@
 - **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo + `docs/debts.md` (seção "API")
-- **PR:** —
+- **PR:** https://github.com/giovannivarela/openmonetis-v2/pull/3 (empilhado sobre o #2)
 
 ## What & why
 Guardar dívidas importadas do extrato e expor resumo e cronograma pela API. A tela (T004) e a
