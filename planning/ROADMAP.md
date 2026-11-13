@@ -2,7 +2,7 @@
 
 Single source of truth for status. See `README.md` for how the system works.
 
-**In flow now:** — (T001–T005 em revisão; próxima: T007)
+**In flow now:** T007 (T001–T005 em revisão)
 
 ---
 
@@ -39,6 +39,6 @@ _Empty._
 | T003 | [Persistência e API de dívidas](tasks/T003-debts-persistence-api.md) | E01 | in-review | este arquivo | [#3](https://github.com/giovannivarela/openmonetis-v2/pull/3) |
 | T004 | [Tela de dívidas (lista e detalhe)](tasks/T004-debts-screen.md) | E01 | in-review | este arquivo | [#4](https://github.com/giovannivarela/openmonetis-v2/pull/4) |
 | T005 | [Parcelas da dívida como lançamentos](tasks/T005-debt-installment-expenses.md) | E01 | in-review | este arquivo | [#5](https://github.com/giovannivarela/openmonetis-v2/pull/5) |
-| T007 | Camada "Financiamentos" em Compromissos futuros | E01 | ready | — | — |
+| T007 | [Camada "Financiamentos" em Compromissos futuros](tasks/T007-debts-commitments-layer.md) | E01 | in-flow | este arquivo | — |
 | T008 | Dedup das parcelas com o extrato importado da conta | E01 | inbox | — | — |
 | T006 | Adaptador Bradesco | E01 | blocked | — | — |
