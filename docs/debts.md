@@ -51,9 +51,14 @@ vencimento, até o saldo zerar.
 ## Resumo
 
 `summarizeDebtSchedule` separa as parcelas vencidas até uma data das restantes e devolve:
-- o saldo após a última parcela vencida;
-- os totais pagos e a pagar de amortização, juros, encargos e principal extraordinário;
+- o saldo atual: o saldo após a última parcela vencida, menos o principal das amortizações extras
+  feitas desde aquele vencimento. A extra entra no cálculo da parcela seguinte, mas o saldo cai no
+  dia em que ela é feita. Uma extra feita no dia de um vencimento entra depois daquela parcela;
+- os totais pagos e a pagar de amortização, juros e encargos, separados pelo vencimento, e o
+  principal extraordinário, separado pela data de cada extra;
 - os meses cortados em relação ao prazo original.
+
+Uma parcela que vence hoje já conta como paga, então a próxima parcela é a seguinte.
 
 ## Leitura de extrato
 

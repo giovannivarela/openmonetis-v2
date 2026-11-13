@@ -22,7 +22,7 @@ const synthetic: { lines: string[]; expected: { installments: Array<{ interestCe
 
 const pdfBase64 = Buffer.from("%PDF-1.4 synthetic").toString("base64");
 
-function setup(lines: string[] | (() => never) = synthetic.lines) {
+function setup(lines: string[] | (() => never) = synthetic.lines, asOf = today) {
   const records = new Map<string, DebtRecord>();
   let saves = 0;
   const repository: DebtsRepository = {
@@ -71,7 +71,7 @@ function setup(lines: string[] | (() => never) = synthetic.lines) {
     },
   };
   const readPdfText = async () => (typeof lines === "function" ? lines() : lines);
-  const service = createDebtsService(repository, readPdfText, () => today);
+  const service = createDebtsService(repository, readPdfText, () => asOf);
   return { service, saves: () => saves };
 }
 
@@ -105,6 +105,37 @@ test("imports a statement and returns the summary and the full schedule", async 
   assert.equal(debt.summary.monthsCut, 240 - 183);
   assert.equal(debt.nextInstallment?.number, 15);
   assert.equal(debt.extraAmortizations.length, 6);
+});
+
+test("the current balance already reflects an extra made after the last due installment", async () => {
+  const { service } = setup();
+  const debt = await service.importStatement(
+    { fileName: "ddc.pdf", contentBase64: pdfBase64 },
+    owner,
+  );
+  const lastDue = debt.schedule[13];
+  const extraPrincipal = debt.schedule[14]?.extraPrincipal ?? 0;
+
+  assert.ok(extraPrincipal > 0);
+  assert.equal(
+    debt.summary.currentBalance,
+    Math.round(((lastDue?.balanceAfter ?? 0) - extraPrincipal) * 100) / 100,
+  );
+  assert.equal(debt.summary.remaining.extraPrincipal, 0);
+  assert.equal(debt.summary.currentBalance, debt.summary.remaining.amortization);
+});
+
+test("an installment due today is paid, so the next one is the following installment", async () => {
+  const dueToday = "2024-03-05";
+  const { service } = setup(synthetic.lines, dueToday);
+  const debt = await service.importStatement(
+    { fileName: "ddc.pdf", contentBase64: pdfBase64 },
+    owner,
+  );
+
+  assert.equal(debt.schedule[13]?.dueDate, dueToday);
+  assert.equal(debt.summary.paidInstallments, 14);
+  assert.equal(debt.nextInstallment?.number, 15);
 });
 
 test("re-importing the same contract keeps a single debt", async () => {

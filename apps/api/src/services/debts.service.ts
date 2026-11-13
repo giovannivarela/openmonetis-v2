@@ -129,8 +129,9 @@ export function createDebtsService(
   function output(record: DebtRecord, rows: DebtScheduleRow[]): DebtOutput {
     const { terms } = record.statement;
     const asOf = today();
-    const summary = summarizeDebtSchedule(terms, rows, asOf);
-    const next = rows.find((row) => row.dueDate >= asOf);
+    const summary = summarizeDebtSchedule(terms, rows, record.statement.extraAmortizations, asOf);
+    // Same split as the summary: an installment due today is already paid.
+    const next = rows.find((row) => row.dueDate > asOf);
     return {
       id: record.id,
       name: record.name,
