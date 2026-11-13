@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Banknote,
   CalendarClock,
   CreditCard,
   FileChartColumn,
@@ -83,6 +84,12 @@ export const navSections: NavSection[] = [
         label: "Contas",
         description: "Saldos, extratos e contas financeiras",
         icon: <Landmark className="size-4" aria-hidden="true" />,
+      },
+      {
+        href: "/debts",
+        label: "Dívidas",
+        description: "Financiamentos, saldo devedor e amortizações",
+        icon: <Banknote className="size-4" aria-hidden="true" />,
       },
       {
         href: "/budgets",

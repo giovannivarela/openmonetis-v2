@@ -1,6 +1,6 @@
 # T004: Tela de dívidas (lista e detalhe)
 
-- **Status:** in-flow
+- **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo + maquete aprovada (aba "Escolhido · A + C")
 - **PR:** —
@@ -52,19 +52,19 @@ Três variantes foram comparadas lado a lado. A escolha combina duas:
 - Leitor do Bradesco (T006).
 
 ## Acceptance criteria
-- [ ] `/debts` lista as dívidas no layout A; sem dívidas, mostra um estado vazio com "Importar
+- [x] `/debts` lista as dívidas no layout A; sem dívidas, mostra um estado vazio com "Importar
       extrato".
-- [ ] Importar um PDF válido abre o detalhe da dívida. PDF inválido, extrato não suportado e
+- [x] Importar um PDF válido abre o detalhe da dívida. PDF inválido, extrato não suportado e
       extrato que o motor não reproduz mostram mensagens breves em PT-BR, sem texto técnico.
-- [ ] O detalhe segue o layout escolhido. Os números batem com a API: o saldo de hoje, os
+- [x] O detalhe segue o layout escolhido. Os números batem com a API: o saldo de hoje, os
       totais anuais (somam os totais pagos + a pagar) e a separação entre o que o extrato registra
       e a projeção.
-- [ ] Alterar a correção projetada atualiza a projeção. Renomear e excluir funcionam; excluir pede
+- [x] Alterar a correção projetada atualiza a projeção. Renomear e excluir funcionam; excluir pede
       confirmação.
-- [ ] Testes: domain e service para os totais anuais, `paidOut` e o principal das extras; testes da
+- [x] Testes: domain e service para os totais anuais, `paidOut` e o principal das extras; testes da
       `debts.presentation.ts` (séries do gráfico, próximas parcelas, erros de importação, arquivo,
       taxa de correção).
-- [ ] `pnpm check`, `pnpm test` e `pnpm build` verdes; a tela conferida rodando contra a API com o
+- [x] `pnpm check`, `pnpm test` e `pnpm build` verdes; a tela conferida rodando contra a API com o
       PDF sintético, nos temas claro e escuro.
 
 ## Dependencies
@@ -80,3 +80,15 @@ Três variantes foram comparadas lado a lado. A escolha combina duas:
 ## Log
 - 2026-11-13 — Layout escolhido: lista do A; detalhe do C com o gráfico de saldo do A no lugar
   da barra de trajetória. Maquete privada: https://claude.ai/artifact/8EDaHNSu2yp5sPky4YhZyR
+- 2026-11-13 — RED → GREEN em três frentes:
+  - domain e service: totais anuais, `paidOut`, `lastDueDate` e o principal das extras;
+  - `debts.presentation.ts`: 9 testes.
+  O card da lista pedia "Termina em", então a API ganhou `summary.lastDueDate`.
+- 2026-11-13 — Conferido rodando: API e web locais com Postgres descartável e o PDF sintético.
+  - Capturas: lista e detalhe nos temas claro e escuro, e o detalhe em 390 px, sem rolagem
+    horizontal.
+  - Corrigido no caminho: gráficos estouravam o card no celular (trilha `auto` do grid); a lista
+    de extras truncava o texto.
+  - Fluxos no navegador: correção projetada (válida e inválida); renomear; importar (arquivo não
+    PDF, PDF inválido e PDF bom, que abre o detalhe e mantém o nome); excluir com confirmação, que
+    volta à lista vazia. Sem erros no console além do 400 esperado do PDF inválido.
