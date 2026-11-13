@@ -131,8 +131,8 @@ export function DebtBalanceChart({ debt }: { debt: DebtDetailOutput }) {
         ) : null}
       </div>
       <p className="sr-only">
-        Saldo devedor de {debt.terms.principal.toLocaleString("pt-BR")} reais no contrato até a
-        quitação em {formatDebtMonth(debt.summary.lastDueDate)}.
+        Evolução do saldo devedor, do contrato até a quitação em{" "}
+        {formatDebtMonth(debt.summary.lastDueDate)}.
       </p>
     </div>
   );
