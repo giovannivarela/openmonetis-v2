@@ -22,6 +22,8 @@ export type DebtKnownInstallment = {
   dueDate: string;
   correctionFactor: number;
   charges?: Record<string, number>;
+  /** Total actually billed, when the statement shows one; it may carry bank-side cent adjustments. */
+  installmentCents?: number;
 };
 
 export type DebtExtraAmortization = {
@@ -190,7 +192,8 @@ function termKeepingInstallment(
   return Math.max(1, divideHalfUp(correctedBalanceCents, amortizationBudget));
 }
 
-function extraPrincipalCents(extra: DebtExtraAmortization) {
+/** Part of an extra amortization that reduces the balance; pro-rata interest and monetary update do not. */
+export function extraAmortizationPrincipalCents(extra: DebtExtraAmortization) {
   return extra.amountCents - extra.proRataInterestCents - extra.monetaryUpdateCents;
 }
 
@@ -274,7 +277,7 @@ export function buildDebtSchedule(input: DebtScheduleInput): DebtScheduleRow[] {
       const referenceInstallmentCents =
         divideHalfUp(correctedBefore, remainingTermMonths) +
         roundHalfUp(correctedBefore * monthlyRate);
-      const principalCents = extraPrincipalCents(extra);
+      const principalCents = extraAmortizationPrincipalCents(extra);
       balanceCents -= principalCents;
       appliedExtraCents += principalCents;
       if (extra.mode === "reduceTerm") {
@@ -316,9 +319,10 @@ export function buildDebtSchedule(input: DebtScheduleInput): DebtScheduleRow[] {
       interestCents,
       charges,
       installmentCents:
+        known?.installmentCents ??
         amortizationCents +
-        interestCents +
-        charges.reduce((sum, charge) => sum + charge.amountCents, 0),
+          interestCents +
+          charges.reduce((sum, charge) => sum + charge.amountCents, 0),
       balanceAfterCents: balanceCents,
     });
     remainingTermMonths -= 1;

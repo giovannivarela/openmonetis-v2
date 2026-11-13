@@ -55,17 +55,58 @@ vencimento, até o saldo zerar.
 - os totais pagos e a pagar de amortização, juros, encargos e principal extraordinário;
 - os meses cortados em relação ao prazo original.
 
+## Leitura de extrato
+
+O histórico de uma dívida vem do demonstrativo do banco. A leitura tem duas etapas:
+
+1. **PDF → linhas** (`apps/api/src/utils/pdf-text-lines.ts`, com `pdfjs-dist`): os trechos de texto
+   de cada página viram linhas, de cima para baixo e da esquerda para a direita.
+2. **Linhas → extrato canônico** (`readDebtStatement` em `packages/domain`): cada banco/formato tem
+   um leitor (`DebtStatementReader`), e o primeiro que reconhece o texto o converte para o modelo
+   `DebtStatement`. Esse modelo traz termos, parcelas com situação, encargos por código e
+   amortizações extraordinárias com a origem dos recursos. Um banco novo é um leitor novo; o motor
+   não muda.
+
+Os leitores são estritos. Texto não reconhecido, uma linha de tabela ilegível, uma operação
+desconhecida ou um sistema de amortização não suportado geram `DebtStatementError` com código
+próprio, em vez de números errados.
+
+`scheduleInputFromStatement` converte o extrato na entrada do motor:
+- as parcelas pagas e a aberta viram parcelas conhecidas, com os encargos e o total cobrados. O
+  total do banco tem precedência, porque pode trazer ajustes de centavos que não aparecem nas
+  colunas;
+- o fator de correção de cada parcela é deduzido dos saldos consecutivos, em seis casas;
+- os encargos que o banco projetou viram regras:
+  - os proporcionais ao saldo viram faixas de taxa, cada uma valendo enquanto uma única taxa
+    reproduz todos os valores; mudança de faixa etária e encargo zerado geram uma faixa nova;
+  - os fixos e indexados viram uma regra a cada mudança de valor.
+
+### Itaú — Demonstrativo Descritivo de Crédito (DDC)
+
+- O valor financiado e a data do contrato vêm da operação "Implantacao de contrato".
+- O prazo original é deduzido da primeira parcela: saldo corrigido ÷ amortização.
+- As amortizações "redução de prazo" e "redução de parcela" viram extras, com origem "recurso
+  próprio" ou FGTS. "Alteração de dia de vencimento" não precisa de tratamento, porque as datas das
+  parcelas já a refletem.
+- Encargos: MIP (proporcional ao saldo), DFI (indexado), seguro residencial, TCA, multa, mora e
+  acordo parcelado (fixos). "Ajuste Financeiro" e "FGTS Mensal" não são encargos: o banco não os
+  soma ao total.
+
 ## Validação
 
 - `packages/domain/src/debts.test.ts` cobre cada regra com casos pequenos calculados à mão.
 - O teste também compara, linha a linha, a fixture sintética
   `packages/domain/src/fixtures/debts-sac-synthetic.json`, gerada por uma implementação de
   referência independente, com um contrato fictício que exercita todas as regras.
-- Extratos reais nunca entram no repositório. Para conferir um extrato localmente, gere uma
-  fixture no mesmo formato e rode:
+- `packages/domain/src/debt-statements.test.ts` lê um DDC sintético (contrato fictício e
+  placeholders no lugar de nome e documentos) e confere que a cadeia leitura → entrada → motor
+  reproduz todas as linhas, incluindo as projetadas, os encargos e os totais.
+- Extratos reais nunca entram no repositório. Para conferir um extrato localmente, gere fixtures no
+  mesmo formato e rode:
 
 ```bash
-DEBTS_PRIVATE_FIXTURE=caminho/da/fixture.json node --import tsx --test packages/domain/src/debts.test.ts
+DEBTS_PRIVATE_FIXTURE=caminho/da/fixture.json DEBTS_PRIVATE_STATEMENT=caminho/do/extrato.json \
+  node --import tsx --test packages/domain/src/debts.test.ts packages/domain/src/debt-statements.test.ts
 ```
 
 ## Limitações conhecidas

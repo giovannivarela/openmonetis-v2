@@ -196,6 +196,15 @@ test("computes charges from rules, honoring actual values and rule changes", () 
   assert.equal(rows[1]?.installmentCents, 25_250 + 1_010 + 2_500 + 76);
 });
 
+test("an actual installment total from the statement takes precedence over the computed one", () => {
+  const rows = schedule({
+    knownInstallments: [{ dueDate: "2024-02-10", correctionFactor: 1, installmentCents: 9_999 }],
+  });
+
+  assert.equal(rows[0]?.installmentCents, 9_999);
+  assert.equal(rows[1]?.installmentCents, 10_000);
+});
+
 test("projects monthly on the same day with the assumed correction until the balance is zero", () => {
   const rows = schedule({
     knownInstallments: monthlyDueDates(1),
