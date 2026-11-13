@@ -11,8 +11,9 @@ export function DebtExtrasList({ extras }: { extras: DebtExtraAmortizationOutput
     );
   }
   return (
-    // Fixed height with its own scroll: a contract with dozens of extras must not stretch the page.
-    <ul className="grid max-h-96 divide-y divide-border/60 overflow-y-auto overscroll-contain pr-2">
+    // Its own scroll, so a contract with dozens of extras never stretches the page: a fixed height
+    // on small screens; on large ones it fills the card, which matches the chart card beside it.
+    <ul className="grid max-h-96 content-start divide-y divide-border/60 overflow-y-auto overscroll-contain pr-2 lg:absolute lg:inset-0 lg:max-h-none">
       {extras.map((extra) => (
         <li
           className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 py-3"
