@@ -6,13 +6,15 @@ já está comprometido com o que foi contratado ou lançado. O período é uma f
 no mês inicial e final, em qualquer ordem, ou use um dos atalhos; Aplicar atualiza o relatório e
 fechar o seletor mantém o intervalo anterior.
 
-Cada mês soma três camadas, sempre na parte da pessoa titular (`admin`):
+Cada mês soma quatro camadas, sempre na parte da pessoa titular (`admin`):
 
 - **Parcelas:** todas as parcelas rastreadas de séries parceladas no mês, pagas ou pendentes.
 - **Recorrentes:** ocorrências de despesas recorrentes ativas, expandidas por período e contadas
   no mês de vencimento (ou da fatura, quando no cartão).
-- **Contas avulsas:** despesas únicas já lançadas no mês, de qualquer forma de pagamento; compras
-  no cartão entram pelo período da fatura.
+- **Financiamentos:** parcelas de [dívidas](debts.md) lançadas como despesas (pagas ou pendentes),
+  no mês de vencimento.
+- **Contas avulsas:** as demais despesas únicas já lançadas no mês, de qualquer forma de pagamento;
+  compras no cartão entram pelo período da fatura.
 
 Estornos e descontos de antecipação lançados no mês são abatidos do total comprometido
 (**Estornos e descontos**), com a mesma regra do Dashboard, e nunca contam como receita.
@@ -25,8 +27,9 @@ Para cada mês a API devolve o total comprometido, a folga (receita menos compro
 percentual da receita (`null` sem receita prevista) e a situação: `healthy` abaixo de 60%,
 `attention` de 60% a 85% e `critical` a partir de 85% ou com compromissos e sem receita. Também
 devolve o primeiro mês de alívio (queda de pelo menos 10% sobre o mês anterior, considerando só
-parcelas e recorrentes, já que contas avulsas futuras raramente estão lançadas) e os parcelamentos
-que terminam no horizonte, com o valor mensal liberado.
+parcelas, recorrentes e financiamentos, já que contas avulsas futuras raramente estão lançadas) e
+os parcelamentos que terminam no horizonte, com o valor mensal liberado. As parcelas de um
+financiamento ficam lançadas para todos os meses à frente, então o fim dele também é um alívio.
 
 Limitações: faturas de cartão não são somadas à parte, para não duplicar as compras que já
 entram por mês de fatura; receitas parceladas não entram na receita prevista; não há saldo atual

@@ -267,6 +267,18 @@ async function expenseScenario(t: TestContext, api: ApiClient) {
     assert.match(JSON.stringify(page), new RegExp(`parcela ${first?.number}`));
   });
 
+  await t.test("Compromissos futuros counts them as financing, not as single bills", async () => {
+    const first = remaining[0];
+    const period = first?.dueDate.slice(0, 7);
+    const report = await api.data<{
+      months: Array<{ period: string; debtsAmount: number; billsAmount: number }>;
+    }>(await api.request(`/reports/commitments?startPeriod=${period}&endPeriod=${period}`, owner));
+    assert.deepEqual(
+      report.months.map((month) => [month.period, month.debtsAmount, month.billsAmount]),
+      [[period, first?.installment, 0]],
+    );
+  });
+
   await t.test("a new projection updates pending expenses and leaves the paid one", async () => {
     const [paid, pending] = await launched();
     await api.data(

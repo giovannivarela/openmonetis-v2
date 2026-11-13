@@ -44,6 +44,8 @@ const CommitmentMonthSchema = z.object({
   period: periodSchema,
   installmentsAmount: z.number().nonnegative(),
   recurringAmount: z.number().nonnegative(),
+  /** Installments launched by debts (financing). */
+  debtsAmount: z.number().nonnegative(),
   billsAmount: z.number().nonnegative(),
   creditsAmount: z.number().nonnegative(),
   committedAmount: z.number().nonnegative(),

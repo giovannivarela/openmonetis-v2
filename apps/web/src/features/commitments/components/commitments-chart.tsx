@@ -19,6 +19,7 @@ import { formatCommitmentChartPeriod } from "../commitments.presentation";
 const chartConfig = {
   installmentsAmount: { label: "Parcelas", color: "var(--chart-1)" },
   recurringAmount: { label: "Recorrentes", color: "var(--chart-2)" },
+  debtsAmount: { label: "Financiamentos", color: "var(--chart-5)" },
   billsAmount: { label: "Contas avulsas", color: "var(--chart-4)" },
   incomeAmount: { label: "Receita prevista", color: "var(--chart-income)" },
 } satisfies ChartConfig;
@@ -99,6 +100,12 @@ export function CommitmentsChart({
             <Bar
               dataKey="recurringAmount"
               fill="var(--color-recurringAmount)"
+              maxBarSize={46}
+              stackId="committed"
+            />
+            <Bar
+              dataKey="debtsAmount"
+              fill="var(--color-debtsAmount)"
               maxBarSize={46}
               stackId="committed"
             />
