@@ -3,7 +3,12 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { ApiError } from "../utils/errors";
 import { PdfTextError } from "../utils/pdf-text-lines";
-import { createDebtsService, type DebtRecord, type DebtsRepository } from "./debts.service";
+import {
+  createDebtsService,
+  DebtExpensesConflictError,
+  type DebtRecord,
+  type DebtsRepository,
+} from "./debts.service";
 
 const owner = "00000000-0000-4000-8000-000000000001";
 const stranger = "00000000-0000-4000-8000-000000000002";
@@ -45,6 +50,7 @@ const adminPersonId = "00000000-0000-4000-8000-0000000000p1";
 function setup(lines: string[] | (() => never) = synthetic.lines, asOf = today) {
   const records = new Map<string, DebtRecord>();
   const expenses = new Map<string, FakeExpense>();
+  const flags = { archivedAccount: false, conflictOnSave: false };
   let saves = 0;
   let expenseIds = 0;
   const repository: DebtsRepository = {
@@ -96,7 +102,10 @@ function setup(lines: string[] | (() => never) = synthetic.lines, asOf = today) 
     },
     async findExpenseTarget(userId, targetAccountId, targetCategoryId) {
       return {
-        account: userId === owner && targetAccountId === accountId ? { archived: false } : null,
+        account:
+          userId === owner && targetAccountId === accountId
+            ? { archived: flags.archivedAccount }
+            : null,
         category:
           userId !== owner
             ? null
@@ -120,6 +129,7 @@ function setup(lines: string[] | (() => never) = synthetic.lines, asOf = today) 
         }));
     },
     async saveInstallmentExpenses(data) {
+      if (flags.conflictOnSave) throw new DebtExpensesConflictError();
       const record = records.get(data.debtId);
       if (!record) throw new Error("missing debt");
       records.set(data.debtId, { ...record, expenses: data.settings });
@@ -162,7 +172,7 @@ function setup(lines: string[] | (() => never) = synthetic.lines, asOf = today) 
   };
   const readPdfText = async () => (typeof lines === "function" ? lines() : lines);
   const service = createDebtsService(repository, readPdfText, () => asOf);
-  return { service, saves: () => saves, expenses };
+  return { service, saves: () => saves, expenses, flags };
 }
 
 async function rejectsWith(promise: Promise<unknown>, status: number, code: string) {
@@ -451,4 +461,28 @@ test("stopping removes pending expenses and keeps the paid ones", async () => {
   assert.equal(detail.expenses, null);
   assert.deepEqual([...expenses.keys()], [paid.id]);
   assert.deepEqual(detail.expenseCounts, { pending: 0, settled: 1 });
+});
+
+test("a concurrent launch is reported as a conflict, not as a server error", async () => {
+  const { service, debt, flags } = await importedDebt();
+  flags.conflictOnSave = true;
+
+  await rejectsWith(
+    service.enableExpenses(debt.id, owner, expenseInput),
+    409,
+    "debt_expenses_conflict",
+  );
+});
+
+test("an archived account pauses the sync until another account is chosen", async () => {
+  const { service, debt, expenses, flags } = await importedDebt();
+  await service.enableExpenses(debt.id, owner, expenseInput);
+  const [first] = sortedExpenses(expenses);
+  const amountBefore = first?.amount;
+  flags.archivedAccount = true;
+
+  await service.update(debt.id, owner, { projectedMonthlyCorrectionRate: 0.002 });
+
+  assert.equal(sortedExpenses(expenses)[0]?.amount, amountBefore);
+  await rejectsWith(service.enableExpenses(debt.id, owner, expenseInput), 404, "account_not_found");
 });

@@ -37,7 +37,7 @@ import type {
   ImportDebtStatementInput,
   UpdateDebtInput,
 } from "@openmonetis/validators/debts";
-import { badRequest, notFound } from "../utils/errors";
+import { badRequest, conflict, notFound } from "../utils/errors";
 import { extractPdfTextLines, PdfTextError } from "../utils/pdf-text-lines";
 
 export type DebtRecord = {
@@ -117,6 +117,25 @@ export type DebtsRepository = {
   disableInstallmentExpenses(debtId: string, userId: string): Promise<void>;
 };
 
+/** Raised by the repository when two launches of the same debt race for the same installment. */
+export class DebtExpensesConflictError extends Error {
+  constructor() {
+    super("Debt installment expenses changed concurrently");
+  }
+}
+
+async function translateExpensesConflict(write: () => Promise<void>) {
+  try {
+    await write();
+  } catch (error) {
+    if (!(error instanceof DebtExpensesConflictError)) throw error;
+    throw conflict(
+      "The installment expenses changed meanwhile; reload and try again",
+      "debt_expenses_conflict",
+    );
+  }
+}
+
 export type PdfTextReader = (pdf: Uint8Array) => Promise<string[]>;
 
 const pdfSignature = "%PDF-";
@@ -124,20 +143,19 @@ const contractReferenceSuffixLength = 4;
 const bankDisplayNames: Record<DebtStatementBank, string> = { itau: "Itaú" };
 
 const statementErrorMessages: Record<DebtStatementErrorCode, string> = {
-  UNSUPPORTED_STATEMENT: "Este PDF não é um extrato de financiamento suportado.",
-  UNSUPPORTED_AMORTIZATION_SYSTEM:
-    "O sistema de amortização deste financiamento ainda não é suportado.",
-  UNSUPPORTED_OPERATION: "O extrato tem uma operação que ainda não sabemos interpretar.",
-  UNREADABLE_LINE: "Não foi possível ler todas as linhas do extrato.",
-  MISSING_FIELD: "Não foi possível ler todas as informações do extrato.",
+  UNSUPPORTED_STATEMENT: "This PDF is not a supported loan statement",
+  UNSUPPORTED_AMORTIZATION_SYSTEM: "The amortization system of this loan is not supported yet",
+  UNSUPPORTED_OPERATION: "The statement has an operation that cannot be read yet",
+  UNREADABLE_LINE: "Some lines of the statement could not be read",
+  MISSING_FIELD: "Some fields of the statement could not be read",
 };
 
 function invalidPdf() {
-  return badRequest("Não foi possível ler o PDF.", "invalid_pdf");
+  return badRequest("The file is not a readable PDF", "invalid_pdf");
 }
 
 function debtNotFound() {
-  return notFound("Dívida não encontrada.", "debt_not_found");
+  return notFound("Debt not found", "debt_not_found");
 }
 
 /** The schedule fields an installment expense carries; the amount is a signed expense. */
@@ -169,7 +187,11 @@ function totalsOutput(totals: DebtTotals) {
 }
 
 function rowOutput(row: DebtScheduleRow, statement: DebtStatement): DebtScheduleRowOutput {
-  const known = row.status === "known" ? statement.installments[row.number - 1] : undefined;
+  // By number, not by position: a statement does not have to list its installments from the first.
+  const known =
+    row.status === "known"
+      ? statement.installments.find((installment) => installment.number === row.number)
+      : undefined;
   return {
     number: row.number,
     dueDate: row.dueDate,
@@ -290,25 +312,31 @@ export function createDebtsService(
       fromInstallment: settings.fromInstallment,
     });
     const namePrefix = debtInstallmentExpenseNamePrefix(record.name);
-    await repository.saveInstallmentExpenses({
-      userId: record.userId,
-      debtId: record.id,
-      personId,
-      settings,
-      namePrefix,
-      create: plan.create.map((installment) => ({
-        ...expenseWrite(installment, settings.paymentMethod),
-        name: `${namePrefix}${installment.number}`,
-      })),
-      update: plan.update.map(({ id, installment }) => ({
-        id,
-        ...expenseWrite(installment, settings.paymentMethod),
-      })),
-      remove: plan.remove,
-    });
+    await translateExpensesConflict(() =>
+      repository.saveInstallmentExpenses({
+        userId: record.userId,
+        debtId: record.id,
+        personId,
+        settings,
+        namePrefix,
+        create: plan.create.map((installment) => ({
+          ...expenseWrite(installment, settings.paymentMethod),
+          name: `${namePrefix}${installment.number}`,
+        })),
+        update: plan.update.map(({ id, installment }) => ({
+          id,
+          ...expenseWrite(installment, settings.paymentMethod),
+        })),
+        remove: plan.remove,
+      }),
+    );
   }
 
-  /** Re-syncs after the schedule or the name changed; a debt without expenses is left alone. */
+  /**
+   * Re-syncs after the schedule or the name changed. A debt without expenses is left alone, and so
+   * is one whose account was archived: nothing new is launched there until another account is
+   * chosen ("Alterar"), which syncs again.
+   */
   async function resyncExpenses(record: DebtRecord) {
     if (!record.expenses) return;
     const target = await repository.findExpenseTarget(
@@ -316,6 +344,7 @@ export function createDebtsService(
       record.expenses.accountId,
       record.expenses.categoryId,
     );
+    if (!target.account || target.account.archived) return;
     await syncExpenses(record, record.expenses, target.adminPersonId);
   }
 
@@ -348,7 +377,7 @@ export function createDebtsService(
     }
     if (divergences.length > 0) {
       throw badRequest(
-        "Os valores do extrato não puderam ser conferidos. Nada foi importado.",
+        "The statement values could not be reproduced; nothing was imported",
         "statement_not_reproduced",
       );
     }
@@ -406,16 +435,16 @@ export function createDebtsService(
       const record = await requireDebt(id, userId);
       const target = await repository.findExpenseTarget(userId, input.accountId, input.categoryId);
       if (!target.account || target.account.archived) {
-        throw notFound("Conta não encontrada.", "account_not_found");
+        throw notFound("Account not found", "account_not_found");
       }
-      if (!target.category) throw notFound("Categoria não encontrada.", "category_not_found");
+      if (!target.category) throw notFound("Category not found", "category_not_found");
       if (target.category.type !== "expense") {
-        throw badRequest("Escolha uma categoria de despesa.", "category_not_expense");
+        throw badRequest("The category must be an expense category", "category_not_expense");
       }
       const next = scheduleOf(record).find((row) => row.dueDate > today());
       const fromInstallment = record.expenses?.fromInstallment ?? next?.number;
       if (fromInstallment === undefined) {
-        throw badRequest("Esta dívida não tem parcelas a vencer.", "debt_paid_off");
+        throw badRequest("The debt has no installment left to pay", "debt_paid_off");
       }
       await syncExpenses(record, { ...input, fromInstallment }, target.adminPersonId);
       return await detail(await requireDebt(id, userId));

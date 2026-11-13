@@ -475,6 +475,15 @@ app.use(
     key: (context) => `debt-imports:${context.get("userId")}`,
   }),
 );
+// Launching installments writes one expense per installment left, hundreds for a long loan.
+app.use(
+  "/debts/:id/expenses",
+  createMutationRateLimit({
+    windowMs: 60_000,
+    max: 20,
+    key: (context) => `debt-expenses:${context.get("userId")}`,
+  }),
+);
 app.use("/goals", privateCache);
 app.use("/goals/*", privateCache);
 app.use("/goals", requireAuth);

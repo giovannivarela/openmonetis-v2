@@ -319,4 +319,31 @@ async function expenseScenario(t: TestContext, api: ApiClient) {
     assert.equal(kept.length, 1);
     assert.equal(kept[0]?.debt_id, null);
   });
+
+  await t.test("an archived account with launched installments can still be deleted", async () => {
+    const reimported = await api.data<DebtDetailOutput>(
+      await api.request("/debts/imports", owner, "POST", {
+        fileName: "ddc.pdf",
+        contentBase64: statementPdf,
+      }),
+      201,
+    );
+    const target = await api.account(owner);
+    await api.data(
+      await api.request(`/debts/${reimported.id}/expenses`, owner, "PUT", {
+        ...input,
+        accountId: target.id,
+      }),
+    );
+    await api.data(
+      await api.request(`/accounts/${target.id}`, owner, "PATCH", { isArchived: true }),
+    );
+    await api.data(await api.request(`/accounts/${target.id}`, owner, "DELETE"));
+    const after = await api.data<DebtDetailOutput>(
+      await api.request(`/debts/${reimported.id}`, owner),
+    );
+    assert.equal(after.expenses, null);
+    assert.deepEqual(after.expenseCounts, { pending: 0, settled: 0 });
+    await api.data(await api.request(`/debts/${reimported.id}`, owner, "DELETE"));
+  });
 }

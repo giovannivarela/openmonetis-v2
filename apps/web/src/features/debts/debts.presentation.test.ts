@@ -241,6 +241,8 @@ test("launch errors become short Portuguese messages", () => {
     debtExpensesErrorMessage("category_not_expense"),
   );
   assert.notEqual(debtExpensesErrorMessage("debt_paid_off"), generic);
+  assert.notEqual(debtExpensesErrorMessage("debt_expenses_conflict"), generic);
+  assert.notEqual(debtExpensesErrorMessage("rate_limited"), generic);
   assert.equal(debtExpensesErrorMessage("anything_else"), generic);
   for (const code of ["account_not_found", "category_not_expense", "debt_paid_off", undefined])
     assert.doesNotMatch(debtExpensesErrorMessage(code), /_/);

@@ -90,3 +90,12 @@ pendente por parcela, ligada à dívida.
     em aberto, com o vencimento ajustado pela regra de dias úteis (sábado → segunda);
   - "Parar de lançar" remove todas.
   Sem erros no console.
+- 2026-11-13 — Revisão do E01, correções aplicadas aqui:
+  - excluir uma conta arquivada com parcelas configuradas dava 500 (FK de
+    `debts.expense_account_id`); agora a exclusão desativa o lançamento na dívida;
+  - conta arquivada pausa a sincronização;
+  - gravações simultâneas viram 409 `debt_expenses_conflict`;
+  - limite de 20 por minuto em `/debts/{id}/expenses`;
+  - mensagens da API em inglês;
+  - edição manual documentada.
+  RED → GREEN: 2 testes de service e 1 cenário de integração.
