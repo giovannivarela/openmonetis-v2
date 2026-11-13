@@ -3,7 +3,7 @@
 - **Status:** in-review
 - **Epic:** E01 — Dívidas: financiamento com leitura de extrato
 - **Spec:** este arquivo + `docs/commitments.md`
-- **PR:** —
+- **PR:** https://github.com/giovannivarela/openmonetis-v2/pull/6 (empilhado sobre o #5)
 
 ## What & why
 Com a T005, as parcelas lançadas já entram no total de Compromissos futuros, mas como "Contas
