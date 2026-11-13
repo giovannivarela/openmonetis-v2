@@ -53,6 +53,7 @@ import {
 import { debtQueryOptions, debtsQueryOptions } from "../debts.queries";
 import { DebtBalanceChart } from "./debt-balance-chart";
 import { DebtCorrectionForm } from "./debt-correction-form";
+import { DebtExpensesCard } from "./debt-expenses-card";
 import { DebtExtrasList } from "./debt-extras-list";
 import { DebtImportDialog } from "./debt-import-dialog";
 import { DebtRenameDialog } from "./debt-rename-dialog";
@@ -265,6 +266,8 @@ function DebtDetail({ debt }: { debt: DebtDetailOutput }) {
           </div>
         ) : null}
       </Card>
+
+      <DebtExpensesCard debt={debt} />
 
       <DebtImportDialog
         onImported={(imported) => {

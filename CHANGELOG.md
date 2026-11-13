@@ -25,6 +25,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   fim previsto de cada financiamento. O detalhe mostra a evolução do saldo, o total pago, os
   juros pagos e a pagar, a composição anual das parcelas, as amortizações extras e o cronograma.
   Também permite importar o extrato, ajustar a correção projetada, renomear e excluir.
+- Dívidas: as parcelas a vencer podem virar despesas pendentes numa conta (`PUT /debts/{id}/expenses`).
+  Elas entram em Contas a pagar e nos lançamentos de cada mês, acompanham o cronograma quando o
+  extrato é reimportado ou a correção muda e nunca alteram as parcelas já pagas.
+- Banco de dados: ligação de lançamentos com parcelas de dívida e configuração do lançamento na
+  dívida (migration `0033_debt_expenses.sql`).
 
 ## [0.17.1] - 2026-11-11
 

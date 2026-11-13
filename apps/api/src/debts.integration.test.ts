@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import test from "node:test";
+import test, { type TestContext } from "node:test";
 import type { DebtDetailOutput, DebtOutput } from "@openmonetis/validators/debts";
 import { createTestApiClient } from "./test-support/api-client";
 import { withIntegrationDatabase } from "./test-support/integration-database";
@@ -166,6 +166,8 @@ test("debts import a statement PDF, isolate users and rebuild the schedule from 
       assert.equal(await statementCount(), 2);
     });
 
+    await t.test("installments launched as expenses", (subtest) => expenseScenario(subtest, api));
+
     await t.test("deleting the debt removes its statements", async () => {
       await api.data(await api.request(`/debts/${debt.id}`, owner, "DELETE"));
       await api.error(await api.request(`/debts/${debt.id}`, owner), 404, "debt_not_found");
@@ -173,3 +175,163 @@ test("debts import a statement PDF, isolate users and rebuild the schedule from 
     });
   });
 });
+
+type ApiClient = Awaited<ReturnType<typeof createTestApiClient>>;
+
+/** Installments launched as expenses, for a person of its own on the shared test database. */
+async function expenseScenario(t: TestContext, api: ApiClient) {
+  const owner = await api.register();
+  const stranger = await api.register();
+  const { pool } = await import("@openmonetis/db");
+  const account = await api.account(owner);
+  const debt = await api.data<DebtDetailOutput>(
+    await api.request("/debts/imports", owner, "POST", {
+      fileName: "ddc.pdf",
+      contentBase64: statementPdf,
+    }),
+    201,
+  );
+  type LaunchedRow = {
+    id: string;
+    number: number;
+    amount: string;
+    due_date: string;
+    period: string;
+    name: string;
+    is_settled: boolean;
+    debt_id: string | null;
+  };
+  const launched = async (where = "debt_id = $1", parameter: string = debt.id) =>
+    (
+      await pool.query<LaunchedRow>(
+        `select id, debt_installment_number as number, amount::text, due_date::text, period,
+                  name, is_settled, debt_id
+             from transactions where ${where} order by debt_installment_number`,
+        [parameter],
+      )
+    ).rows;
+  const expensesPath = `/debts/${debt.id}/expenses`;
+  const input = {
+    accountId: account.id,
+    categoryId: owner.expenseCategoryId,
+    paymentMethod: "boleto",
+  };
+
+  await t.test("refuses another person's account and an income category", async () => {
+    const foreign = await api.account(stranger);
+    await api.error(
+      await api.request(expensesPath, owner, "PUT", { ...input, accountId: foreign.id }),
+      404,
+      "account_not_found",
+    );
+    await api.error(
+      await api.request(expensesPath, owner, "PUT", {
+        ...input,
+        categoryId: owner.incomeCategoryId,
+      }),
+      400,
+      "category_not_expense",
+    );
+    await api.error(await api.request(expensesPath, stranger, "PUT", input), 404, "debt_not_found");
+    assert.deepEqual(await launched(), []);
+  });
+
+  const enabled = await api.data<DebtDetailOutput>(
+    await api.request(expensesPath, owner, "PUT", input),
+  );
+  const remaining = enabled.schedule.slice(enabled.summary.paidInstallments);
+
+  await t.test("launches one pending expense per remaining installment", async () => {
+    const rows = await launched();
+    assert.ok(remaining.length > 0);
+    assert.deepEqual(
+      rows.map((row) => [row.number, row.amount, row.due_date, row.period, row.is_settled]),
+      remaining.map((row) => [
+        row.number,
+        (-row.installment).toFixed(2),
+        row.dueDate,
+        row.dueDate.slice(0, 7),
+        false,
+      ]),
+    );
+    assert.equal(rows[0]?.name, `${debt.name} · parcela ${remaining[0]?.number}`);
+    assert.deepEqual(enabled.expenseCounts, { pending: remaining.length, settled: 0 });
+    assert.equal(enabled.expenses?.fromInstallment, remaining[0]?.number);
+  });
+
+  await t.test("launched installments are payables of their month", async () => {
+    const first = remaining[0];
+    const page = await api.data<unknown>(
+      await api.request(`/transactions?period=${first?.dueDate.slice(0, 7)}&payables=true`, owner),
+    );
+    assert.match(JSON.stringify(page), new RegExp(`parcela ${first?.number}`));
+  });
+
+  await t.test("a new projection updates pending expenses and leaves the paid one", async () => {
+    const [paid, pending] = await launched();
+    await api.data(
+      await api.request("/transactions/settlement", owner, "PATCH", {
+        ids: [paid?.id],
+        isSettled: true,
+      }),
+    );
+    await api.data(
+      await api.request(`/debts/${debt.id}`, owner, "PATCH", {
+        projectedMonthlyCorrectionRate: 0.002,
+      }),
+    );
+    const after = await launched();
+    assert.equal(after.find((row) => row.id === paid?.id)?.amount, paid?.amount);
+    assert.notEqual(after.find((row) => row.id === pending?.id)?.amount, pending?.amount);
+  });
+
+  await t.test("stopping removes pending expenses and keeps the paid one", async () => {
+    const detail = await api.data<DebtDetailOutput>(
+      await api.request(expensesPath, owner, "DELETE"),
+    );
+    const rows = await launched();
+    assert.equal(detail.expenses, null);
+    assert.deepEqual(detail.expenseCounts, { pending: 0, settled: 1 });
+    assert.deepEqual(
+      rows.map((row) => row.is_settled),
+      [true],
+    );
+  });
+
+  await t.test("deleting the debt keeps the paid expense, unlinked", async () => {
+    const [paid] = await launched();
+    await api.data(await api.request(expensesPath, owner, "PUT", input));
+    await api.data(await api.request(`/debts/${debt.id}`, owner, "DELETE"));
+    assert.deepEqual(await launched(), []);
+    const kept = await launched("id = $1", paid?.id);
+    assert.equal(kept.length, 1);
+    assert.equal(kept[0]?.debt_id, null);
+  });
+
+  await t.test("an archived account with launched installments can still be deleted", async () => {
+    const reimported = await api.data<DebtDetailOutput>(
+      await api.request("/debts/imports", owner, "POST", {
+        fileName: "ddc.pdf",
+        contentBase64: statementPdf,
+      }),
+      201,
+    );
+    const target = await api.account(owner);
+    await api.data(
+      await api.request(`/debts/${reimported.id}/expenses`, owner, "PUT", {
+        ...input,
+        accountId: target.id,
+      }),
+    );
+    await api.data(
+      await api.request(`/accounts/${target.id}`, owner, "PATCH", { isArchived: true }),
+    );
+    await api.data(await api.request(`/accounts/${target.id}`, owner, "DELETE"));
+    const after = await api.data<DebtDetailOutput>(
+      await api.request(`/debts/${reimported.id}`, owner),
+    );
+    assert.equal(after.expenses, null);
+    assert.deepEqual(after.expenseCounts, { pending: 0, settled: 0 });
+    await api.data(await api.request(`/debts/${reimported.id}`, owner, "DELETE"));
+  });
+}

@@ -131,7 +131,12 @@ export type TransactionCreateRecord = Omit<
   | "dueDateAdjustment"
   | "frozenDueDate"
   | "dueDateRuleExcluded"
+  | "debtId"
+  | "debtInstallmentNumber"
 > & {
+  /** Set only for expenses launched by a debt (debts.repository); unset here means `null`. */
+  debtId?: string | null;
+  debtInstallmentNumber?: number | null;
   dueDateAdjustment?: import("@openmonetis/domain/due-date-rules").DueDateAdjustmentDetails | null;
   frozenDueDate?: Date | null;
   dueDateRuleExcluded?: boolean;
@@ -404,8 +409,16 @@ async function assertSufficientTransferBalance(
 
 export type TransactionWithRelations = Omit<
   Transaction,
-  "settledAmount" | "settledDate" | "dueDateRuleExcluded" | "frozenDueDate" | "dueDateAdjustment"
+  | "settledAmount"
+  | "settledDate"
+  | "dueDateRuleExcluded"
+  | "frozenDueDate"
+  | "dueDateAdjustment"
+  | "debtId"
+  | "debtInstallmentNumber"
 > & {
+  debtId?: string | null;
+  debtInstallmentNumber?: number | null;
   dueDateRuleExcluded?: boolean;
   dueDateAdjustment?: import("@openmonetis/domain/due-date-rules").DueDateAdjustmentDetails | null;
   frozenDueDate?: Date | null;

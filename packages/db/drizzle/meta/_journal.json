@@ -232,6 +232,13 @@
       "when": 1794519697469,
       "tag": "0032_debts",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794582784327,
+      "tag": "0033_debt_expenses",
+      "breakpoints": true
     }
   ]
 }

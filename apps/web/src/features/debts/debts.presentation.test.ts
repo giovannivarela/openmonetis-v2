@@ -6,12 +6,15 @@ import {
   debtBalanceYearTicks,
   debtBankInitials,
   debtBankLabel,
+  debtExpensePaymentMethodOptions,
+  debtExpensesErrorMessage,
   debtExtraModeLabel,
   debtExtraSourceLabel,
   debtImportErrorMessage,
   debtInstallmentStatusLabel,
   formatDebtCorrectionRate,
   formatDebtDate,
+  formatDebtExpenseCounts,
   formatDebtMonth,
   getDebtAmortizedShare,
   getUpcomingDebtInstallments,
@@ -209,4 +212,38 @@ test("labels", () => {
   assert.equal(debtExtraModeLabel("reduceInstallment"), "Reduz parcela");
   assert.equal(debtExtraSourceLabel("fgts"), "FGTS");
   assert.equal(debtExtraSourceLabel("ownFunds"), "Recursos próprios");
+});
+
+test("installments can be launched with the account payment methods, never a credit card", () => {
+  assert.deepEqual(debtExpensePaymentMethodOptions, [
+    { value: "boleto", label: "Boleto" },
+    { value: "debit_card", label: "Cartão de débito" },
+    { value: "pix", label: "Pix" },
+    { value: "bank_transfer", label: "Transferência bancária" },
+  ]);
+});
+
+test("launched installments are counted in words", () => {
+  assert.equal(
+    formatDebtExpenseCounts({ pending: 137, settled: 1 }),
+    "137 parcelas pendentes · 1 paga",
+  );
+  assert.equal(formatDebtExpenseCounts({ pending: 1, settled: 0 }), "1 parcela pendente");
+  assert.equal(formatDebtExpenseCounts({ pending: 0, settled: 3 }), "3 pagas");
+  assert.equal(formatDebtExpenseCounts({ pending: 0, settled: 0 }), "Nenhuma parcela lançada");
+});
+
+test("launch errors become short Portuguese messages", () => {
+  const generic = debtExpensesErrorMessage(undefined);
+  assert.notEqual(debtExpensesErrorMessage("account_not_found"), generic);
+  assert.equal(
+    debtExpensesErrorMessage("category_not_found"),
+    debtExpensesErrorMessage("category_not_expense"),
+  );
+  assert.notEqual(debtExpensesErrorMessage("debt_paid_off"), generic);
+  assert.notEqual(debtExpensesErrorMessage("debt_expenses_conflict"), generic);
+  assert.notEqual(debtExpensesErrorMessage("rate_limited"), generic);
+  assert.equal(debtExpensesErrorMessage("anything_else"), generic);
+  for (const code of ["account_not_found", "category_not_expense", "debt_paid_off", undefined])
+    assert.doesNotMatch(debtExpensesErrorMessage(code), /_/);
 });

@@ -133,6 +133,41 @@ Todas as rotas exigem sessão, respondem com cache privado e filtram pelo usuár
   `remainingOnly` os anos que só têm parcelas a vencer. Esses números vêm do domain; a tela só os
   exibe.
 
+## Parcelas em Lançamentos
+
+`PUT /debts/{id}/expenses` (`{ accountId, categoryId, paymentMethod }`) lança as parcelas a vencer
+como despesas pendentes. `DELETE /debts/{id}/expenses` para de lançar.
+- **Forma:** cada parcela vira uma despesa regular, pendente, com vencimento e data iguais ao
+  vencimento da parcela, valor igual ao total da parcela e nome "{dívida} · parcela N". Por isso ela
+  entra em Contas a pagar, nos avisos de vencimento e na lista do mês, e segue as regras de
+  vencimento do app. As formas aceitas são boleto, cartão de débito, Pix e transferência bancária.
+- **Início:** a primeira parcela lançada é a próxima a vencer na ativação. O histórico não é criado,
+  porque costuma já existir como outros lançamentos.
+- **Sincronização** (`planDebtInstallmentExpenses`, no domain). Roda ao ativar, ao reimportar, ao
+  mudar a correção e ao renomear:
+  - cria as parcelas que faltam;
+  - atualiza valor e vencimento das pendentes;
+  - remove as pendentes que saíram do cronograma;
+  - aplica a conta, a categoria, a forma e o nome atuais às pendentes.
+  Lançamentos já pagos nunca mudam.
+- **Ligação:** `transactions.debt_id` e `transactions.debt_installment_number`, únicos por dívida.
+  Parar de lançar ou excluir a dívida remove as pendentes. As pagas ficam; ao excluir a dívida,
+  perdem a ligação.
+- **Erros:**
+  - `account_not_found`: conta de outra pessoa ou arquivada;
+  - `category_not_found` e `category_not_expense`;
+  - `debt_paid_off`: sem parcelas a vencer;
+  - `debt_expenses_conflict` (409): duas gravações simultâneas da mesma dívida.
+  Ativar ou alterar tem limite de 20 por minuto por pessoa.
+- **Conta arquivada:** enquanto a conta escolhida estiver arquivada, a sincronização não roda.
+  Escolha outra conta em "Alterar" para retomar. Excluir a conta remove os lançamentos dela e
+  desativa o lançamento das parcelas na dívida.
+- **Edição manual:** os lançamentos pendentes pertencem à dívida. Um valor, nome, conta ou
+  categoria editado à mão volta ao da dívida na próxima sincronização, e uma parcela pendente
+  excluída à mão é recriada. Para tirar as parcelas de Lançamentos, use "Parar de lançar".
+- **Limitação:** o débito da parcela que chega pela importação do extrato da conta ainda vira outro
+  lançamento. O dedup das duas fontes é a T008.
+
 ## Tela
 
 `/debts` lista as dívidas. `/debts/{id}` mostra o detalhe de cada uma:
