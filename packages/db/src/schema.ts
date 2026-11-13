@@ -33,6 +33,7 @@ import {
 import { tagColors, tagStatuses } from "@openmonetis/domain/tags";
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   date,
@@ -875,6 +876,9 @@ export const transactions = pgTable(
     recurringRuleId: uuid("recurring_rule_id").references(() => recurringTransactionRules.id, {
       onDelete: "set null",
     }),
+    /** Debt whose installment this expense pays; cleared when the debt is deleted. */
+    debtId: uuid("debt_id").references((): AnyPgColumn => debts.id, { onDelete: "set null" }),
+    debtInstallmentNumber: integer("debt_installment_number"),
     dueDateRuleExcluded: boolean("due_date_rule_excluded").notNull().default(false),
     frozenDueDate: date("frozen_due_date", { mode: "date" }),
     dueDateAdjustment: jsonb("due_date_adjustment").$type<DueDateAdjustmentDetails>(),
@@ -990,6 +994,13 @@ export const transactions = pgTable(
         AND ${table.currentInstallment} IS NULL
         AND ${table.seriesId} IS NULL
       )`,
+    ),
+    uniqueIndex("transactions_debt_installment_unique")
+      .on(table.debtId, table.debtInstallmentNumber)
+      .where(sql`${table.debtId} IS NOT NULL`),
+    check(
+      "transactions_debt_installment_check",
+      sql`${table.debtId} IS NULL OR ${table.debtInstallmentNumber} >= 1`,
     ),
     check(
       "transactions_payment_method_origin_check",
@@ -2705,6 +2716,15 @@ export const debts = pgTable(
     })
       .notNull()
       .default("0"),
+    /** Where installments are launched as expenses; all four are set together or none. */
+    expenseAccountId: uuid("expense_account_id").references(() => financialAccounts.id, {
+      onDelete: "restrict",
+    }),
+    expenseCategoryId: uuid("expense_category_id").references(() => categories.id, {
+      onDelete: "restrict",
+    }),
+    expensePaymentMethod: paymentMethod("expense_payment_method"),
+    expenseFromInstallment: integer("expense_from_installment"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -2713,6 +2733,21 @@ export const debts = pgTable(
   },
   (table) => [
     uniqueIndex("debts_id_user_id_unique").on(table.id, table.userId),
+    check(
+      "debts_expense_settings_check",
+      sql`(
+        ${table.expenseAccountId} IS NULL
+        AND ${table.expenseCategoryId} IS NULL
+        AND ${table.expensePaymentMethod} IS NULL
+        AND ${table.expenseFromInstallment} IS NULL
+      ) OR (
+        ${table.expenseAccountId} IS NOT NULL
+        AND ${table.expenseCategoryId} IS NOT NULL
+        AND ${table.expensePaymentMethod} IS NOT NULL
+        AND ${table.expensePaymentMethod} <> 'credit_card'
+        AND ${table.expenseFromInstallment} >= 1
+      )`,
+    ),
     uniqueIndex("debts_user_bank_contract_unique").on(
       table.userId,
       table.bank,

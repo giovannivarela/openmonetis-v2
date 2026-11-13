@@ -9,6 +9,7 @@
     "./categories": "./src/categories.ts",
     "./category-trends": "./src/category-trends.ts",
     "./commitments": "./src/commitments.ts",
+    "./debt-expenses": "./src/debt-expenses.ts",
     "./debts": "./src/debts.ts",
     "./money": "./src/money.ts",
     "./debt-statements": "./src/debt-statements.ts",

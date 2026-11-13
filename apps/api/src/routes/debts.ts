@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { ok } from "@openmonetis/shared/api";
 import {
   DebtDetailOutputSchema,
+  DebtExpensesInputSchema,
   DebtOutputSchema,
   DebtParamsSchema,
   ImportDebtStatementInputSchema,
@@ -152,6 +153,72 @@ export function createDebtsRoute(service: DebtsService) {
     async (context) =>
       context.json(
         ok(await service.remove(context.req.valid("param").id, context.get("userId"))),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "put",
+      path: "/{id}/expenses",
+      tags: ["Debts"],
+      description:
+        "Launches the remaining installments as pending expenses in an account, or changes where they are launched.",
+      request: {
+        params: DebtParamsSchema,
+        body: {
+          required: true,
+          content: { "application/json": { schema: DebtExpensesInputSchema } },
+        },
+      },
+      responses: {
+        200: {
+          description: "Debt with its installment expenses in sync",
+          content: { "application/json": { schema: DebtDetailResponseSchema } },
+        },
+        400: {
+          description: "Income category or a debt with no installment left",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        401: unauthorized,
+        404: {
+          description: "Debt, account or category not found",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(
+          await service.enableExpenses(
+            context.req.valid("param").id,
+            context.get("userId"),
+            context.req.valid("json"),
+          ),
+        ),
+        200,
+      ),
+  );
+
+  route.openapi(
+    createRoute({
+      method: "delete",
+      path: "/{id}/expenses",
+      tags: ["Debts"],
+      description: "Stops launching installments: pending expenses are removed, paid ones stay.",
+      request: { params: DebtParamsSchema },
+      responses: {
+        200: {
+          description: "Debt without installment expenses",
+          content: { "application/json": { schema: DebtDetailResponseSchema } },
+        },
+        401: unauthorized,
+        404: debtNotFound,
+      },
+    }),
+    async (context) =>
+      context.json(
+        ok(await service.disableExpenses(context.req.valid("param").id, context.get("userId"))),
         200,
       ),
   );

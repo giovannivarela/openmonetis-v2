@@ -1,4 +1,9 @@
-import type { DebtDetailOutput, DebtOutput, UpdateDebtInput } from "@openmonetis/validators/debts";
+import type {
+  DebtDetailOutput,
+  DebtExpensesInput,
+  DebtOutput,
+  UpdateDebtInput,
+} from "@openmonetis/validators/debts";
 import { requestApi as request } from "@/lib/api-client";
 
 export function getDebts() {
@@ -20,6 +25,17 @@ export async function importDebtStatement(file: File) {
 
 export function updateDebt(id: string, input: UpdateDebtInput) {
   return request<DebtOutput>(`/debts/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+}
+
+export function enableDebtExpenses(id: string, input: DebtExpensesInput) {
+  return request<DebtDetailOutput>(`/debts/${id}/expenses`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export function disableDebtExpenses(id: string) {
+  return request<DebtDetailOutput>(`/debts/${id}/expenses`, { method: "DELETE" });
 }
 
 export function deleteDebt(id: string) {
