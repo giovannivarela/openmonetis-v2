@@ -84,7 +84,7 @@ function parseBrazilianDate(value: string) {
   return `${value.slice(6, 10)}-${value.slice(3, 5)}-${value.slice(0, 2)}`;
 }
 
-/** "9,500000000" (percent) → 0.095, shifting the decimal point in text to avoid float division. */
+/** "10,490000000" (percent) → 0.1049, shifting the decimal point in text to avoid float division. */
 function parsePercentRate(value: string) {
   const [integerPart = "", fractionPart = ""] = value.replaceAll(".", "").split(",");
   const padded = integerPart.padStart(3, "0");
