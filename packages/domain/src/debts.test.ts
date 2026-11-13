@@ -9,6 +9,7 @@ import {
   type DebtScheduleRow,
   type DebtTerms,
   summarizeDebtSchedule,
+  summarizeDebtScheduleYears,
 } from "./debts";
 
 type DebtFixture = {
@@ -227,6 +228,7 @@ test("summarizes paid and remaining totals and the months cut from the original 
   assert.equal(summary.paidInstallments, 3);
   assert.equal(summary.remainingInstallments, 6);
   assert.equal(summary.monthsCut, 3);
+  assert.equal(summary.lastDueDate, rows.at(-1)?.dueDate);
   assert.equal(summary.currentBalanceCents, 60_000);
   assert.equal(summary.paid.amortizationCents, 30_000);
   assert.equal(summary.paid.extraPrincipalCents, 30_000);
@@ -257,6 +259,44 @@ test("an extra made on a due date counts once the installment is due", () => {
   const onDueDate = summarizeDebtSchedule(debtTerms, rows, extras, "2024-03-10");
   assert.equal(onDueDate.currentBalanceCents, 120_000 - 2 * 10_000 - 30_000);
   assert.equal(onDueDate.paid.extraPrincipalCents, 30_000);
+});
+
+test("what already left the pocket is the due installments plus the extras already made", () => {
+  const debtTerms = terms();
+  const extras = [extra({ date: "2024-03-20", amountCents: 30_500, proRataInterestCents: 500 })];
+  const rows = schedule({ terms: debtTerms, extraAmortizations: extras });
+
+  const summary = summarizeDebtSchedule(debtTerms, rows, extras, "2024-03-25");
+  assert.equal(summary.paidOutCents, 2 * 10_000 + 30_500);
+});
+
+test("splits the schedule by year, with extras by their own date", () => {
+  const debtTerms = terms();
+  const extras = [extra({ date: "2024-03-20", mode: "reduceInstallment" })];
+  const rows = schedule({ terms: debtTerms, extraAmortizations: extras });
+  const years = summarizeDebtScheduleYears(rows, extras, "2024-04-10");
+  const summary = summarizeDebtSchedule(debtTerms, rows, extras, "2024-04-10");
+
+  assert.deepEqual(
+    years.map(({ year, installments, remainingOnly }) => ({ year, installments, remainingOnly })),
+    [
+      { year: 2024, installments: 11, remainingOnly: false },
+      { year: 2025, installments: 1, remainingOnly: true },
+    ],
+  );
+  assert.equal(years[0]?.extraPrincipalCents, 30_000);
+  assert.equal(years[1]?.extraPrincipalCents, 0);
+  const sum = (key: "amortizationCents" | "interestCents" | "chargesCents") =>
+    years.reduce((total, year) => total + year[key], 0);
+  assert.equal(
+    sum("amortizationCents"),
+    summary.paid.amortizationCents + summary.remaining.amortizationCents,
+  );
+  assert.equal(sum("interestCents"), summary.paid.interestCents + summary.remaining.interestCents);
+  assert.equal(
+    years.reduce((total, year) => total + year.installmentCents, 0),
+    rows.reduce((total, row) => total + row.installmentCents, 0),
+  );
 });
 
 test("matches the independent reference engine on the synthetic fixture, row by row", () => {

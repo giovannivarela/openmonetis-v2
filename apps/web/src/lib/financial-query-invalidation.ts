@@ -12,6 +12,7 @@ const financialQueryRoots = new Set([
   "commitments",
   "financial-distribution",
   "dashboard",
+  "debts",
   "due-date-rules",
   "installments",
   "inbox",

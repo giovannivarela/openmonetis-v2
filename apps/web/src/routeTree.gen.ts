@@ -17,6 +17,7 @@ import { Route as CardsRouteImport } from './routes/cards'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DebtsRouteImport } from './routes/debts'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as NotesRouteImport } from './routes/notes'
@@ -31,6 +32,7 @@ import { Route as ApiProxySplatRouteImport } from './routes/api-proxy.$'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as CardsCardIdRouteImport } from './routes/cards_.$cardId'
 import { Route as CategoriesCategoryIdRouteImport } from './routes/categories_.$categoryId'
+import { Route as DebtsDebtIdRouteImport } from './routes/debts_.$debtId'
 import { Route as PeoplePersonIdRouteImport } from './routes/people_.$personId'
 import { Route as PersonConnectionsAcceptRouteImport } from './routes/person-connections.accept'
 import { Route as ReportsAiDiagnosesRouteImport } from './routes/reports/ai-diagnoses'
@@ -80,6 +82,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebtsRoute = DebtsRouteImport.update({
+  id: '/debts',
+  path: '/debts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GoalsRoute = GoalsRouteImport.update({
@@ -152,6 +159,11 @@ const CategoriesCategoryIdRoute = CategoriesCategoryIdRouteImport.update({
   path: '/categories/$categoryId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DebtsDebtIdRoute = DebtsDebtIdRouteImport.update({
+  id: '/debts_/$debtId',
+  path: '/debts/$debtId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeoplePersonIdRoute = PeoplePersonIdRouteImport.update({
   id: '/people_/$personId',
   path: '/people/$personId',
@@ -215,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
+  '/debts': typeof DebtsRoute
   '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
   '/notes': typeof NotesRoute
@@ -229,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/api/$': typeof ApiSplatRoute
   '/cards/$cardId': typeof CardsCardIdRoute
   '/categories/$categoryId': typeof CategoriesCategoryIdRoute
+  '/debts/$debtId': typeof DebtsDebtIdRoute
   '/people/$personId': typeof PeoplePersonIdRoute
   '/person-connections/accept': typeof PersonConnectionsAcceptRoute
   '/reports/ai-diagnoses': typeof ReportsAiDiagnosesRoute
@@ -249,6 +263,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
+  '/debts': typeof DebtsRoute
   '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
   '/notes': typeof NotesRoute
@@ -263,6 +278,7 @@ export interface FileRoutesByTo {
   '/api/$': typeof ApiSplatRoute
   '/cards/$cardId': typeof CardsCardIdRoute
   '/categories/$categoryId': typeof CategoriesCategoryIdRoute
+  '/debts/$debtId': typeof DebtsDebtIdRoute
   '/people/$personId': typeof PeoplePersonIdRoute
   '/person-connections/accept': typeof PersonConnectionsAcceptRoute
   '/reports/ai-diagnoses': typeof ReportsAiDiagnosesRoute
@@ -284,6 +300,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
+  '/debts': typeof DebtsRoute
   '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
   '/notes': typeof NotesRoute
@@ -298,6 +315,7 @@ export interface FileRoutesById {
   '/api/$': typeof ApiSplatRoute
   '/cards_/$cardId': typeof CardsCardIdRoute
   '/categories_/$categoryId': typeof CategoriesCategoryIdRoute
+  '/debts_/$debtId': typeof DebtsDebtIdRoute
   '/people_/$personId': typeof PeoplePersonIdRoute
   '/person-connections/accept': typeof PersonConnectionsAcceptRoute
   '/reports/ai-diagnoses': typeof ReportsAiDiagnosesRoute
@@ -320,6 +338,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/changelog'
     | '/dashboard'
+    | '/debts'
     | '/goals'
     | '/inbox'
     | '/notes'
@@ -334,6 +353,7 @@ export interface FileRouteTypes {
     | '/api/$'
     | '/cards/$cardId'
     | '/categories/$categoryId'
+    | '/debts/$debtId'
     | '/people/$personId'
     | '/person-connections/accept'
     | '/reports/ai-diagnoses'
@@ -354,6 +374,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/changelog'
     | '/dashboard'
+    | '/debts'
     | '/goals'
     | '/inbox'
     | '/notes'
@@ -368,6 +389,7 @@ export interface FileRouteTypes {
     | '/api/$'
     | '/cards/$cardId'
     | '/categories/$categoryId'
+    | '/debts/$debtId'
     | '/people/$personId'
     | '/person-connections/accept'
     | '/reports/ai-diagnoses'
@@ -388,6 +410,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/changelog'
     | '/dashboard'
+    | '/debts'
     | '/goals'
     | '/inbox'
     | '/notes'
@@ -402,6 +425,7 @@ export interface FileRouteTypes {
     | '/api/$'
     | '/cards_/$cardId'
     | '/categories_/$categoryId'
+    | '/debts_/$debtId'
     | '/people_/$personId'
     | '/person-connections/accept'
     | '/reports/ai-diagnoses'
@@ -423,6 +447,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   ChangelogRoute: typeof ChangelogRoute
   DashboardRoute: typeof DashboardRoute
+  DebtsRoute: typeof DebtsRoute
   GoalsRoute: typeof GoalsRoute
   InboxRoute: typeof InboxRoute
   NotesRoute: typeof NotesRoute
@@ -437,6 +462,7 @@ export interface RootRouteChildren {
   ApiSplatRoute: typeof ApiSplatRoute
   CardsCardIdRoute: typeof CardsCardIdRoute
   CategoriesCategoryIdRoute: typeof CategoriesCategoryIdRoute
+  DebtsDebtIdRoute: typeof DebtsDebtIdRoute
   PeoplePersonIdRoute: typeof PeoplePersonIdRoute
   PersonConnectionsAcceptRoute: typeof PersonConnectionsAcceptRoute
   ReportsAiDiagnosesRoute: typeof ReportsAiDiagnosesRoute
@@ -505,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debts': {
+      id: '/debts'
+      path: '/debts'
+      fullPath: '/debts'
+      preLoaderRoute: typeof DebtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/goals': {
@@ -605,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesCategoryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/debts_/$debtId': {
+      id: '/debts_/$debtId'
+      path: '/debts/$debtId'
+      fullPath: '/debts/$debtId'
+      preLoaderRoute: typeof DebtsDebtIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/people_/$personId': {
       id: '/people_/$personId'
       path: '/people/$personId'
@@ -687,6 +727,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   ChangelogRoute: ChangelogRoute,
   DashboardRoute: DashboardRoute,
+  DebtsRoute: DebtsRoute,
   GoalsRoute: GoalsRoute,
   InboxRoute: InboxRoute,
   NotesRoute: NotesRoute,
@@ -701,6 +742,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSplatRoute: ApiSplatRoute,
   CardsCardIdRoute: CardsCardIdRoute,
   CategoriesCategoryIdRoute: CategoriesCategoryIdRoute,
+  DebtsDebtIdRoute: DebtsDebtIdRoute,
   PeoplePersonIdRoute: PeoplePersonIdRoute,
   PersonConnectionsAcceptRoute: PersonConnectionsAcceptRoute,
   ReportsAiDiagnosesRoute: ReportsAiDiagnosesRoute,

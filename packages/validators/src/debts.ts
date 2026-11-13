@@ -20,9 +20,14 @@ export const ImportDebtStatementInputSchema = z
   })
   .openapi("ImportDebtStatementInput");
 
+const debtNameSchema = z.string().trim().min(1).max(120);
+
+/** Renaming only; the same name rule as `UpdateDebtInputSchema`. */
+export const DebtNameInputSchema = z.object({ name: debtNameSchema }).openapi("DebtNameInput");
+
 export const UpdateDebtInputSchema = z
   .object({
-    name: z.string().trim().min(1).max(120).optional(),
+    name: debtNameSchema.optional(),
     projectedMonthlyCorrectionRate: z
       .number()
       .finite()
@@ -67,9 +72,12 @@ export const DebtOutputSchema = z
     }),
     summary: z.object({
       currentBalance: amountSchema,
+      /** Due installments plus the full amount of the extras already made. */
+      paidOut: amountSchema,
       paidInstallments: z.number().int(),
       remainingInstallments: z.number().int(),
       monthsCut: z.number().int(),
+      lastDueDate: z.iso.date(),
       paid: DebtTotalsOutputSchema,
       remaining: DebtTotalsOutputSchema,
     }),
@@ -102,14 +110,30 @@ export const DebtExtraAmortizationOutputSchema = z
     amount: amountSchema,
     proRataInterest: amountSchema,
     monetaryUpdate: amountSchema,
+    /** What the extra took off the balance: amount minus pro-rata interest and monetary update. */
+    principal: amountSchema,
     mode: z.enum(debtExtraAmortizationModes),
     source: z.enum(debtExtraAmortizationSources),
   })
   .openapi("DebtExtraAmortization");
 
+export const DebtScheduleYearOutputSchema = z
+  .object({
+    year: z.number().int(),
+    installments: z.number().int(),
+    amortization: amountSchema,
+    interest: amountSchema,
+    charges: amountSchema,
+    total: amountSchema,
+    extraPrincipal: amountSchema,
+    remainingOnly: z.boolean(),
+  })
+  .openapi("DebtScheduleYear");
+
 export const DebtDetailOutputSchema = DebtOutputSchema.extend({
   schedule: z.array(DebtScheduleRowOutputSchema),
   extraAmortizations: z.array(DebtExtraAmortizationOutputSchema),
+  yearlyBreakdown: z.array(DebtScheduleYearOutputSchema),
 }).openapi("DebtDetail");
 
 export type ImportDebtStatementInput = z.infer<typeof ImportDebtStatementInputSchema>;
@@ -117,3 +141,5 @@ export type UpdateDebtInput = z.infer<typeof UpdateDebtInputSchema>;
 export type DebtOutput = z.infer<typeof DebtOutputSchema>;
 export type DebtDetailOutput = z.infer<typeof DebtDetailOutputSchema>;
 export type DebtScheduleRowOutput = z.infer<typeof DebtScheduleRowOutputSchema>;
+export type DebtExtraAmortizationOutput = z.infer<typeof DebtExtraAmortizationOutputSchema>;
+export type DebtScheduleYearOutput = z.infer<typeof DebtScheduleYearOutputSchema>;

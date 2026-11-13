@@ -12,7 +12,9 @@ import {
   DebtScheduleError,
   type DebtScheduleRow,
   type DebtTotals,
+  extraAmortizationPrincipalCents,
   summarizeDebtSchedule,
+  summarizeDebtScheduleYears,
 } from "@openmonetis/domain/debts";
 import { fromCents } from "@openmonetis/domain/money";
 import { getCurrentDateInBrazil } from "@openmonetis/shared/date-time";
@@ -152,9 +154,11 @@ export function createDebtsService(
       },
       summary: {
         currentBalance: fromCents(summary.currentBalanceCents),
+        paidOut: fromCents(summary.paidOutCents),
         paidInstallments: summary.paidInstallments,
         remainingInstallments: summary.remainingInstallments,
         monthsCut: summary.monthsCut,
+        lastDueDate: summary.lastDueDate,
         paid: totalsOutput(summary.paid),
         remaining: totalsOutput(summary.remaining),
       },
@@ -168,17 +172,31 @@ export function createDebtsService(
 
   function detail(record: DebtRecord): DebtDetailOutput {
     const rows = scheduleOf(record);
+    const { extraAmortizations } = record.statement;
     return {
       ...output(record, rows),
       schedule: rows.map((row) => rowOutput(row, record.statement)),
-      extraAmortizations: record.statement.extraAmortizations.map((extra) => ({
+      extraAmortizations: extraAmortizations.map((extra) => ({
         date: extra.date,
         amount: fromCents(extra.amountCents),
         proRataInterest: fromCents(extra.proRataInterestCents),
         monetaryUpdate: fromCents(extra.monetaryUpdateCents),
+        principal: fromCents(extraAmortizationPrincipalCents(extra)),
         mode: extra.mode,
         source: extra.source,
       })),
+      yearlyBreakdown: summarizeDebtScheduleYears(rows, extraAmortizations, today()).map(
+        (year) => ({
+          year: year.year,
+          installments: year.installments,
+          amortization: fromCents(year.amortizationCents),
+          interest: fromCents(year.interestCents),
+          charges: fromCents(year.chargesCents),
+          total: fromCents(year.installmentCents),
+          extraPrincipal: fromCents(year.extraPrincipalCents),
+          remainingOnly: year.remainingOnly,
+        }),
+      ),
     };
   }
 

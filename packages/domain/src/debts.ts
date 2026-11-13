@@ -73,9 +73,13 @@ export type DebtTotals = {
 
 export type DebtSummary = {
   currentBalanceCents: number;
+  /** Due installments plus the full amount of the extras already made. */
+  paidOutCents: number;
   paidInstallments: number;
   remainingInstallments: number;
   monthsCut: number;
+  /** Due date of the last installment of the schedule: when the debt ends. */
+  lastDueDate: string;
   paid: DebtTotals;
   remaining: DebtTotals;
 };
@@ -84,6 +88,19 @@ export const debtScheduleErrorCodes = [
   "SCHEDULE_DID_NOT_CONVERGE",
   "TERM_ENDED_WITH_BALANCE",
 ] as const;
+export type DebtScheduleYear = {
+  year: number;
+  installments: number;
+  amortizationCents: number;
+  interestCents: number;
+  chargesCents: number;
+  installmentCents: number;
+  /** Principal of the extras made in the year, by the date of each extra. */
+  extraPrincipalCents: number;
+  /** Every installment of the year is still to come. */
+  remainingOnly: boolean;
+};
+
 export type DebtScheduleErrorCode = (typeof debtScheduleErrorCodes)[number];
 
 export class DebtScheduleError extends Error {
@@ -370,13 +387,46 @@ export function summarizeDebtSchedule(
   return {
     currentBalanceCents:
       (lastPaidRow?.balanceAfterCents ?? terms.principalCents) - principalOf(extrasSinceLastPaid),
+    paidOutCents:
+      paidRows.reduce((sum, row) => sum + row.installmentCents, 0) +
+      madeExtras.reduce((sum, extra) => sum + extra.amountCents, 0),
     paidInstallments: paidRows.length,
     remainingInstallments: remainingRows.length,
     monthsCut: terms.termMonths - rows.length,
+    lastDueDate: rows.at(-1)?.dueDate ?? terms.contractDate,
     paid: { ...totalsOf(paidRows), extraPrincipalCents: principalOf(madeExtras) },
     remaining: {
       ...totalsOf(remainingRows),
       extraPrincipalCents: principalOf(extraAmortizations.filter((extra) => extra.date > asOf)),
     },
   };
+}
+
+/**
+ * Yearly totals of a schedule, by due date. Extras count in the year they were made, the same split
+ * the summary uses.
+ */
+export function summarizeDebtScheduleYears(
+  rows: DebtScheduleRow[],
+  extraAmortizations: DebtExtraAmortization[],
+  asOf: string,
+): DebtScheduleYear[] {
+  const yearOf = (date: string) => Number(date.slice(0, 4));
+  const years = [...new Set(rows.map((row) => yearOf(row.dueDate)))];
+  return years.map((year) => {
+    const yearRows = rows.filter((row) => yearOf(row.dueDate) === year);
+    const totals = totalsOf(yearRows);
+    return {
+      year,
+      installments: yearRows.length,
+      amortizationCents: totals.amortizationCents,
+      interestCents: totals.interestCents,
+      chargesCents: totals.chargesCents,
+      installmentCents: yearRows.reduce((sum, row) => sum + row.installmentCents, 0),
+      extraPrincipalCents: extraAmortizations
+        .filter((extra) => yearOf(extra.date) === year)
+        .reduce((sum, extra) => sum + extraAmortizationPrincipalCents(extra), 0),
+      remainingOnly: yearRows.every((row) => row.dueDate > asOf),
+    };
+  });
 }

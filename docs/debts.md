@@ -105,7 +105,7 @@ Todas as rotas exigem sessão, respondem com cache privado e filtram pelo usuár
 | --- | --- | --- |
 | `GET` | `/debts` | Lista as dívidas com resumo e próxima parcela. |
 | `POST` | `/debts/imports` | Importa um extrato em PDF (`{ fileName, contentBase64 }`). |
-| `GET` | `/debts/{id}` | Resumo, cronograma completo e amortizações extraordinárias. |
+| `GET` | `/debts/{id}` | Resumo, cronograma completo, amortizações extraordinárias e totais por ano. |
 | `PATCH` | `/debts/{id}` | Altera o nome e a hipótese de correção mensal da projeção. |
 | `DELETE` | `/debts/{id}` | Remove a dívida e seus extratos. |
 
@@ -126,6 +126,23 @@ Todas as rotas exigem sessão, respondem com cache privado e filtram pelo usuár
   de cada parcela (paga, aberta, projetada) vêm do extrato. Por isso, um extrato antigo mostra como
   projetadas parcelas que já venceram: importe um mais recente.
 - "Zerar dados" remove dívidas e extratos.
+- **Resumo:** além do saldo atual e dos totais pagos e a pagar, traz `paidOut` (parcelas vencidas
+  + valor integral das extras feitas) e `lastDueDate` (vencimento da última parcela). Cada extra
+  traz `principal`, o que ela abateu do saldo. `yearlyBreakdown` soma amortização, juros, encargos
+  e total por ano de vencimento, as extras pelo ano em que foram feitas, e marca com
+  `remainingOnly` os anos que só têm parcelas a vencer. Esses números vêm do domain; a tela só os
+  exibe.
+
+## Tela
+
+`/debts` lista as dívidas. `/debts/{id}` mostra o detalhe de cada uma:
+- o saldo devedor de hoje e um gráfico do saldo do contrato até a quitação. O que já venceu fica
+  em linha cheia e a projeção, tracejada; as amortizações extras aparecem como marcadores;
+- próxima parcela, total pago até hoje, juros pagos e juros a pagar;
+- a composição anual das parcelas, com o campo da correção mensal projetada;
+- a lista de amortizações extras e as próximas parcelas, com o cronograma completo sob demanda.
+
+A importação aceita PDF de até 5 MB. Os erros da API aparecem como mensagens curtas, sem o código.
 
 ## Validação
 
